@@ -31,6 +31,7 @@
  */
 
 #include <stdio.h>
+#include <syslog.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
@@ -135,7 +136,7 @@ int typ, mode;
 
     prot = ((typ == TRANS_8023) ? htons(ETH_P_802_2) : htons(protocol));
     if ((s = socket(AF_INET, SOCK_PACKET, prot)) < 0) {
-      perror(interface);
+      syslog(LOG_ERR, "pfInit: %s: socket: %m", interface);
       return(-1);
     }
     if (s >= 32) {
@@ -181,7 +182,7 @@ u_char *addr;
   ifr.ifr_name[sizeof(ifr.ifr_name)] = 0;
   ifr.ifr_addr.sa_family = AF_INET;
   if (ioctl(s, SIOCGIFHWADDR, &ifr) < 0) {
-    perror("SIOCGIFHWADDR");
+    syslog(LOG_ERR, "pfEthAddr: %s: SIOCGIFHWADDR: %m", interface);
     return(-1);
   }
   memcpy((char *)addr, ifr.ifr_hwaddr.sa_data, 6);
@@ -209,7 +210,7 @@ u_char *addr;
 #ifdef	UPFILT
   /* get the real interface name */
   if (ioctl(s, EIOCIFNAME, &ifr) < 0) {
-    perror("EIOCIFNAME");
+    syslog(LOG_ERR, "pfAddMulti: %s: EIOCIFNAME: %m", interface);
     return(-1);
   }
 #endif	UPFILT
@@ -224,11 +225,11 @@ u_char *addr;
    *
    */
   if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-    perror("socket()");
+    syslog(LOG_ERR, "pfAddMulti: %s: socket: %m", interface);
     return(-1);
   }
   if (ioctl(sock, SIOCADDMULTI, (caddr_t)&ifr) < 0) {
-    perror("SIOCADDMULTI");
+    syslog(LOG_ERR, "pfAddMulti: %s: SIOCADDMULTI: %m", interface);
     close(sock);
     return(-1);
   }
@@ -263,11 +264,11 @@ u_char *addr;
    *
    */
   if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-    perror("socket()");
+    syslog(LOG_ERR, "pfDelMulti: %s: socket: %m", interface);
     return(-1);
   }
   if (ioctl(sock, SIOCDELMULTI, (caddr_t)&ifr) < 0) {
-    perror("SIOCDELMULTI");
+    syslog(LOG_ERR, "pfDelMulti: %s: SIOCDELMULTI: %m", interface);
     close(sock);
     return(-1);
   }
