@@ -50,10 +50,6 @@
 static char rcsid[] = "$Id: mopa.out.c,v 1.5 1996/08/16 22:44:58 moj Exp $";
 #endif
 
-#include "os.h"
-#include "common/common.h"
-#include "common/mopdef.h"
-#include "common/file.h"
 #if defined(__NetBSD__) || defined(__OpenBSD__)
 #include <sys/exec_aout.h>
 #endif
@@ -68,20 +64,24 @@ static char rcsid[] = "$Id: mopa.out.c,v 1.5 1996/08/16 22:44:58 moj Exp $";
 #define MID_VAX 140
 #endif
 
+#include <common/os.h>
+#include <common/common.h>
+#include <common/mopdef.h>
+#include <common/file.h>
+
 u_char header[512];		/* The VAX header we generate is 1 block. */
 struct exec ex, ex_swap;
 
 int
 main (int argc, char **argv)
 {
-	FILE   *out;		/* A FILE because that is easier. */
-	int	i;
-	struct dllist dl;
-	
 #ifdef NOAOUT
 	fprintf(stderr, "%s: has no function in OS/BSD\n", argv[0]);
 	return(1);
-#endif	
+#else
+	FILE   *out;		/* A FILE because that is easier. */
+	int	i;
+	struct dllist dl;
 
 	if (argc != 3) {
 		fprintf (stderr, "usage: %s kernel-in sys-out\n", argv[0]);
@@ -151,4 +151,7 @@ main (int argc, char **argv)
 	}
 	
 	fclose (out);
+
+	return (0);
+#endif	
 }

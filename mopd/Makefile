@@ -1,20 +1,19 @@
-#	$Id: Makefile,v 1.11 1996/08/16 22:36:06 moj Exp $
+PROGS = mopd
+OBJS = mopd.o process.o
+LIBS = ../common/libcommon.a
 
-PROG=	mopd
-SRCS=	mopd.c process.c print.c cmp.c get.c put.c mopdef.c nma.c device.c \
-	version.c pf.c loop-bsd.c dl.c rc.c file.c
-MAN=	mopd.8
-CFLAGS+= -I${.CURDIR} -I${.CURDIR}/.. -I${.CURDIR}/../common
-CLEANFILES= version.c version.h
-LDADD=	-lkvm
-.PATH:	${.CURDIR}/../common
+CPPFLAGS = -I..
 
-version.c version.h: ${.CURDIR}/../common/VERSION
-	rm -f version.c; \
-	sed 's/.*/char version[] = "&";/' ${.ALLSRC} > version.c
-	set `sed 's/\([0-9]*\)\.\([0-9]*\).*/\1 \2/' ${.ALLSRC}` ; \
-		{ echo '#define VERSION_MAJOR' $$1 ; \
-		  echo '#define VERSION_MINOR' $$2 ; } > version.h
+all: $(PROGS)
 
+mopd: $(OBJS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o mopd $(OBJS) $(LIBS)
 
-.include <bsd.prog.mk>
+../common/libcommon.a:
+	cd ../common && $(MAKE) libcommon.a
+
+.c.o:
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
+
+clean:
+	rm -f core $(PROGS) *.o

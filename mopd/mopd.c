@@ -38,16 +38,16 @@ static char rcsid[] = "$Id: mopd.c,v 1.14 1996/03/31 19:20:42 moj Exp $";
  *		mopd [ -d -f -v ] [ -3 | -4 ] interface
  */
 
-#include "os.h"
-#include "common/common.h"
-#include "common/mopdef.h"
-#include "common/device.h"
-#include "common/print.h"
-#include "common/pf.h"
-#include "common/cmp.h"
-#include "common/get.h"
-#include "common/dl.h"
-#include "common/rc.h"
+#include <common/os.h>
+#include <common/common.h>
+#include <common/mopdef.h>
+#include <common/device.h>
+#include <common/print.h>
+#include <common/pf.h>
+#include <common/cmp.h>
+#include <common/get.h>
+#include <common/dl.h>
+#include <common/rc.h>
 #include "process.h"
 
 /*

@@ -31,18 +31,19 @@
 static char rcsid[] = "$Id: process.c,v 1.21 1996/08/22 17:04:07 moj Exp $";
 #endif
 
-#include "os.h"
-#include "common/common.h"
-#include "common/mopdef.h"
-#include "common/nmadef.h"
-#include "common/get.h"
-#include "common/put.h"
-#include "common/print.h"
-#include "common/pf.h"
-#include "common/cmp.h"
-#include "common/dl.h"
-#include "common/rc.h"
-#include "common/file.h"
+#include <common/os.h>
+#include <common/common.h>
+#include <common/mopdef.h>
+#include <common/nmadef.h>
+#include <common/get.h>
+#include <common/put.h>
+#include <common/print.h>
+#include <common/pf.h>
+#include <common/cmp.h>
+#include <common/dl.h>
+#include <common/rc.h>
+#include <common/file.h>
+#include "process.h"
 
 extern u_char	buf[];
 extern int	DebugFlag;

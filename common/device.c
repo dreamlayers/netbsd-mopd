@@ -32,8 +32,8 @@ static char rcsid[] = "$Id: device.c,v 1.21 1996/08/08 00:00:59 moj Exp $";
 #endif
 
 #include "os.h"
-#include "common/common.h"
-#include "common/mopdef.h"
+#include "common.h"
+#include "mopdef.h"
 
 struct	if_info *iflist;		/* Interface List		*/
 
@@ -147,6 +147,13 @@ deviceOpen(ifname, proto, trans)
 
 #ifdef	DEV_NEW_CONF
 		deviceEthAddr(p->if_name,&p->eaddr[0]);
+#elif	defined(__linux__)
+		{
+			int s;
+			s = socket(AF_INET,SOCK_DGRAM,0);
+			pfEthAddr(s,p->if_name,&p->eaddr[0]);
+			(void) close(s);
+		}
 #else
 		p->eaddr[0]= tmp.eaddr[0];
 		p->eaddr[1]= tmp.eaddr[1];
@@ -206,7 +213,11 @@ deviceInitOne(ifname)
 
 	/* Ok, get transport information */
 	
+#ifdef __linux__
+	trans = TRANS_ETHER+TRANS_8023+TRANS_AND; 
+#else
 	trans = pfTrans(interface);
+#endif
 
 #ifndef NORC
 	/* Start with MOP Remote Console */

@@ -31,6 +31,8 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef __linux__
+
 #ifndef LINT
 static char rcsid[] = "$Id: pf.c,v 1.16 1996/08/06 14:19:48 moj Exp $";
 #endif
@@ -58,7 +60,7 @@ static char rcsid[] = "$Id: pf.c,v 1.16 1996/08/06 14:19:48 moj Exp $";
 #include <syslog.h>
 #include <varargs.h>
 
-#include "common/mopdef.h"
+#include "mopdef.h"
 
 /*
  * Variables
@@ -277,3 +279,4 @@ pfWrite(fd, buf, len, trans)
 	return(-1);
 }
 
+#endif /* !__linux__ */

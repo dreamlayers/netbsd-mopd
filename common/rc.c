@@ -32,9 +32,9 @@ static char rcsid[] = "$Id: rc.c,v 1.8 1995/10/13 19:25:34 moj Exp $";
 #endif
 
 #include "os.h"
-#include "common/get.h"
-#include "common/print.h"
-#include "common/mopdef.h"
+#include "get.h"
+#include "print.h"
+#include "mopdef.h"
 
 void
 mopDumpRC(fd, pkt, trans)

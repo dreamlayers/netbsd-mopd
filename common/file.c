@@ -32,8 +32,8 @@ static char rcsid[] = "$Id: file.c,v 1.4 1996/08/16 22:39:22 moj Exp $";
 #endif
 
 #include "os.h"
-#include "common/common.h"
-#include "common/mopdef.h"
+#include "common.h"
+#include "mopdef.h"
 
 #ifndef NOAOUT
 #if defined(__NetBSD__) || defined(__OpenBSD__)
@@ -49,6 +49,8 @@ static char rcsid[] = "$Id: file.c,v 1.4 1996/08/16 22:39:22 moj Exp $";
 #define MID_VAX 140
 #endif
 #endif
+
+int fileinfo;
 
 void
 mopFilePutLX(buf, index, value, cnt)
@@ -129,10 +131,10 @@ CheckMopFile(fd)
 	u_char	header[512];
 	short	image_type;
 
+	(void)lseek(fd, (off_t) 0, SEEK_SET);
+
 	if (read(fd, header, 512) != 512)
 		return(-1);
-
-	(void)lseek(fd, (off_t) 0, SEEK_SET);
 
 	image_type = (u_short)(header[IHD_W_ALIAS+1]*256 +
 			       header[IHD_W_ALIAS]);
@@ -162,6 +164,8 @@ GetMopFileInfo(fd, load, xfr)
 	short	image_type;
 	u_long	load_addr, xfr_addr, isd, iha, hbcnt, isize;
 
+	(void)lseek(fd, (off_t) 0, SEEK_SET);
+
 	if (read(fd, header, 512) != 512)
 		return(-1);
 
@@ -184,43 +188,43 @@ GetMopFileInfo(fd, load, xfr)
 				    header[iha+IHA_L_TFRADR1+2]*0x10000 +
 				    header[iha+IHA_L_TFRADR1+1]*0x100 +
 				    header[iha+IHA_L_TFRADR1]) & 0x7fffffff;
-#ifdef INFO
-			printf("Native Image (VAX)\n");
-			printf("Header Block Count: %d\n",hbcnt);
-			printf("Image Size:         %08x\n",isize);
-			printf("Load Address:       %08x\n",load_addr);
-			printf("Transfer Address:   %08x\n",xfr_addr);
-#endif
+			if (fileinfo) {
+				printf("Native Image (VAX)\n");
+				printf("Header Block Count: %d\n",hbcnt);
+				printf("Image Size:         %08x\n",isize);
+				printf("Load Address:       %08x\n",load_addr);
+				printf("Transfer Address:   %08x\n",xfr_addr);
+			}
 			break;
 		case IHD_C_RSX:			/* RSX image produced by TKB */
 			hbcnt = header[L_BBLK+1]*256 + header[L_BBLK];
 			isize = (header[L_BLDZ+1]*256 + header[L_BLDZ]) * 64;
 			load_addr = header[L_BSA+1]*256 + header[L_BSA];
 			xfr_addr  = header[L_BXFR+1]*256 + header[L_BXFR];
-#ifdef INFO
-			printf("RSX Image\n");
-			printf("Header Block Count: %d\n",hbcnt);
-			printf("Image Size:         %08x\n",isize);
-			printf("Load Address:       %08x\n",load_addr);
-			printf("Transfer Address:   %08x\n",xfr_addr);
-#endif
+			if (fileinfo) {
+				printf("RSX Image\n");
+				printf("Header Block Count: %d\n",hbcnt);
+				printf("Image Size:         %08x\n",isize);
+				printf("Load Address:       %08x\n",load_addr);
+				printf("Transfer Address:   %08x\n",xfr_addr);
+			}
 			break;
 		case IHD_C_BPA:			/* BASIC plus analog         */
-#ifdef INFO
-			printf("BASIC-Plus Image, not supported\n");
-#endif
+			if (fileinfo) {
+				printf("BASIC-Plus Image, not supported\n");
+			}
 			return(-1);
 			break;
 		case IHD_C_ALIAS:		/* Alias		     */
-#ifdef INFO
-			printf("Alias, not supported\n");
-#endif
+			if (fileinfo) {
+				printf("Alias, not supported\n");
+			}
 			return(-1);
 			break;
 		case IHD_C_CLI:			/* Image is CLI		     */
-#ifdef INFO
-			printf("CLI, not supported\n");
-#endif
+			if (fileinfo) {
+				printf("CLI, not supported\n");
+			}
 			return(-1);
 			break;
 		case IHD_C_PMAX:		/* PMAX system image	     */
@@ -237,13 +241,13 @@ GetMopFileInfo(fd, load, xfr)
 				    header[iha+IHA_L_TFRADR1+2]*0x10000 +
 				    header[iha+IHA_L_TFRADR1+1]*0x100 +
 				    header[iha+IHA_L_TFRADR1]);
-#ifdef INFO
-			printf("PMAX Image \n");
-			printf("Header Block Count: %d\n",hbcnt);
-			printf("Image Size:         %08x\n",isize);
-			printf("Load Address:       %08x\n",load_addr);
-			printf("Transfer Address:   %08x\n",xfr_addr);
-#endif
+			if (fileinfo) {
+				printf("PMAX Image \n");
+				printf("Header Block Count: %d\n",hbcnt);
+				printf("Image Size:         %08x\n",isize);
+				printf("Load Address:       %08x\n",load_addr);
+				printf("Transfer Address:   %08x\n",xfr_addr);
+			}
 			break;
 		case IHD_C_ALPHA:		/* ALPHA system image	     */
 			isd = (header[EIHD_L_ISDOFF+3]*0x1000000 +
@@ -260,18 +264,18 @@ GetMopFileInfo(fd, load, xfr)
 				 header[isd+EISD_L_SECSIZE]);
 			load_addr = 0;
 			xfr_addr = 0;
-#ifdef INFO
-			printf("Alpha Image \n");
-			printf("Header Block Count: %d\n",hbcnt);
-			printf("Image Size:         %08x\n",isize);
-			printf("Load Address:       %08x\n",load_addr);
-			printf("Transfer Address:   %08x\n",xfr_addr);
-#endif
+			if (fileinfo) {
+				printf("Alpha Image \n");
+				printf("Header Block Count: %d\n",hbcnt);
+				printf("Image Size:         %08x\n",isize);
+				printf("Load Address:       %08x\n",load_addr);
+				printf("Transfer Address:   %08x\n",xfr_addr);
+			}
 			break;
 		default:
-#ifdef INFO
-			printf("Unknown Image (%d)\n",image_type);
-#endif
+			if (fileinfo) {
+				printf("Unknown Image (%d)\n",image_type);
+			}
 			return(-1);
 	}
 
@@ -412,17 +416,15 @@ CheckAOutFile(fd)
 	struct exec ex, ex_swap;
 	int	mid = -1;
 
+	(void)lseek(fd, (off_t) 0, SEEK_SET);
+	
 /*###416 [cc] `fd' undeclared (first use this function)%%%*/
 	if (read(fd, (char *)&ex, sizeof(ex)) != sizeof(ex))
 		return(-1);
 
-	(void)lseek(fd, (off_t) 0, SEEK_SET);
-	
-	if (read(fd, (char *)&ex_swap, sizeof(ex_swap)) != sizeof(ex_swap))
-		return(-1);
+	bcopy(&ex, &ex_swap, sizeof(ex_swap));
+	mopFileSwapX((u_char *)&ex_swap, 0, 4);
 
-	(void)lseek(fd, (off_t) 0, SEEK_SET);
-	
 	mid = getMID(mid, N_GETMID (ex));
 
 	if (mid == -1) {
@@ -452,14 +454,12 @@ GetAOutFileInfo(fd, load, xfr, a_text, a_text_fill,
 	int	mid = -1;
 	u_long	magic, clbytes, clofset;
 
+	(void)lseek(fd, (off_t) 0, SEEK_SET);
+
 	if (read(fd, (char *)&ex, sizeof(ex)) != sizeof(ex))
 		return(-1);
 
-	(void)lseek(fd, (off_t) 0, SEEK_SET);
-
-	if (read(fd, (char *)&ex_swap, sizeof(ex_swap)) != sizeof(ex_swap))
-		return(-1);
-
+	bcopy(&ex, &ex_swap, sizeof(ex_swap));
 	mopFileSwapX((u_char *)&ex_swap, 0, 4);
 
 	mid = getMID(mid, N_GETMID (ex));
@@ -526,83 +526,83 @@ GetAOutFileInfo(fd, load, xfr, a_text, a_text_fill,
 /*###525 [cc] syntax error before `}'%%%*/
 	}
 
-#ifdef INFO
-	printf("a.out image (");
-	switch (N_GETMID (ex)) {
-	case MID_I386:
-		printf("i386");
-		break;
+	if (fileinfo) {
+		printf("a.out image (");
+		switch (N_GETMID (ex)) {
+		case MID_I386:
+			printf("i386");
+			break;
 #ifdef MID_M68K
-	case MID_M68K:
-		printf("m68k");
-		break;
+		case MID_M68K:
+			printf("m68k");
+			break;
 #endif
 #ifdef MID_M68K4K
-	case MID_M68K4K:
-		printf("m68k 4k");
-		break;
+		case MID_M68K4K:
+			printf("m68k 4k");
+			break;
 #endif
 #ifdef MID_NS32532
-	case MID_NS32532:
-		printf("pc532");
-		break;
+		case MID_NS32532:
+			printf("pc532");
+			break;
 #endif
-	case MID_SPARC:
-		printf("sparc");
-		break;
+		case MID_SPARC:
+			printf("sparc");
+			break;
 #ifdef MID_PMAX
-	case MID_PMAX:
-		printf("pmax");
-		break;
+		case MID_PMAX:
+			printf("pmax");
+			break;
 #endif
 #ifdef MID_VAX
-	case MID_VAX:
-		printf("vax");
-		break;
+		case MID_VAX:
+			printf("vax");
+			break;
 #endif
 #ifdef MID_ALPHA
-	case MID_ALPHA:
-		printf("alpha");
-		break;
+		case MID_ALPHA:
+			printf("alpha");
+			break;
 #endif
 #ifdef MID_MIPS
-	case MID_MIPS:
-		printf("mips");
-		break;
+		case MID_MIPS:
+			printf("mips");
+			break;
 #endif
 #ifdef MID_ARM6
-	case MID_ARM6:
-		printf("arm32");
-		break;
+		case MID_ARM6:
+			printf("arm32");
+			break;
 #endif
-	default:
+		default:
+		}
+		printf(") Magic: ");
+		switch (N_GETMAGIC (ex)) {
+		case OMAGIC:
+			printf("OMAGIC");
+			break;
+		case NMAGIC:
+			printf("NMAGIC");
+			break;
+		case ZMAGIC:
+			printf("ZMAGIC");
+			break;
+		case QMAGIC:
+			printf("QMAGIC");
+			break;
+		default:
+			printf("Unknown %d",N_GETMAGIC (ex));
+		}
+		printf("\n");
+		printf("Size of text:       %08x\n",ex.a_text);
+		printf("Size of data:       %08x\n",ex.a_data);
+		printf("Size of bss:        %08x\n",ex.a_bss);
+		printf("Size of symbol tab: %08x\n",ex.a_syms);
+		printf("Transfer Address:   %08x\n",ex.a_entry);
+		printf("Size of reloc text: %08x\n",ex.a_trsize);
+		printf("Size of reloc data: %08x\n",ex.a_drsize);
 	}
-	printf(") Magic: ");
-	switch (N_GETMAGIC (ex)) {
-	case OMAGIC:
-		printf("OMAGIC");
-		break;
-	case NMAGIC:
-		printf("NMAGIC");
-		break;
-	case ZMAGIC:
-		printf("ZMAGIC");
-		break;
-	case QMAGIC:
-		printf("QMAGIC");
-		break;
-	default:
-		printf("Unknown %d",N_GETMAGIC (ex));
-	}
-	printf("\n");
-	printf("Size of text:       %08x\n",ex.a_text);
-	printf("Size of data:       %08x\n",ex.a_data);
-	printf("Size of bss:        %08x\n",ex.a_bss);
-	printf("Size of symbol tab: %08x\n",ex.a_syms);
-	printf("Transfer Address:   %08x\n",ex.a_entry);
-	printf("Size of reloc text: %08x\n",ex.a_trsize);
-	printf("Size of reloc data: %08x\n",ex.a_drsize);
-#endif
 	magic = N_GETMAGIC (ex);
 	clbytes = getCLBYTES(mid);
 	clofset = clbytes - 1;

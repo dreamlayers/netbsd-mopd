@@ -35,11 +35,11 @@ static char rcsid[] = "$Id: print.c,v 1.18 1996/08/16 22:42:08 moj Exp $";
 #include <stdio.h>
 
 #include "os.h"
-#include "common/mopdef.h"
-#include "common/nmadef.h"
-#include "common/nma.h"
-#include "common/cmp.h"
-#include "common/get.h"
+#include "mopdef.h"
+#include "nmadef.h"
+#include "nma.h"
+#include "cmp.h"
+#include "get.h"
 
 #define SHORT_PRINT
 

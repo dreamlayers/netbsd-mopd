@@ -1,5 +1,16 @@
-#	$Id: Makefile,v 1.5 1996/08/16 22:37:51 moj Exp $
+AR = ar
+CC = gcc
+RANLIB = ranlib
 
-SUBDIR=	mopd mopprobe moptrace mopchk mopa.out
+CFLAGS = -O2 -g
+LDFLAGS =
 
-.include <bsd.subdir.mk>
+SUBDIRS = common mopd mopchk mopprobe moptrace
+
+all clean: 
+	@for dir in $(SUBDIRS); do \
+		(cd $$dir && \
+		 $(MAKE) "AR=$(AR)" "CC=$(CC)" "RANLIB=$(RANLIB)" \
+			 "CFLAGS=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)" $@) || \
+		 exit 1; \
+	done

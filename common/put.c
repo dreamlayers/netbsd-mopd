@@ -34,7 +34,7 @@ static char rcsid[] = "$Id: put.c,v 1.5 1996/08/16 22:42:56 moj Exp $";
 #include <stddef.h>
 #include <sys/types.h>
 #include <time.h>
-#include "common/mopdef.h"
+#include "mopdef.h"
 
 void
 mopPutChar(pkt, index, value)

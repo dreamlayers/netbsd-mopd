@@ -33,7 +33,19 @@
 #ifndef _OS_H_
 #define _OS_H_
 
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+#define DEV_NEW_CONF
+#endif
+
+#if defined(__linux__)
+#define SETPGRP_NOPARAM
+#endif
+
 #include <stdio.h>
+
+#ifndef FILENAME_MAX
+#define FILENAME_MAX 255			/* SunOS 4 is missing it */
+#endif
 
 #include <syslog.h>
 #include <signal.h>
@@ -42,16 +54,24 @@
 #include <errno.h>
 #include <sys/socket.h>
 #include <net/if.h>
+#ifdef DEV_NEW_CONF
 #include <net/if_dl.h>
 #include <net/if_types.h>
+#endif
 #include <sys/ioctl.h>
 #include <stdlib.h>
 #include <sys/time.h>
 #include <time.h>
 #include <fcntl.h>
+#if defined(sun)
+#include <string.h>
+#else
 #include <strings.h>
+#endif
 #include <unistd.h>
 
-#define  DEV_NEW_CONF
+#if defined(sun)
+typedef int ssize_t;
+#endif
 
 #endif _OS_H_

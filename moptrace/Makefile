@@ -1,20 +1,19 @@
-#	$Id: Makefile,v 1.6 1996/08/16 22:49:14 moj Exp $
+PROGS = moptrace
+OBJS = moptrace.o
+LIBS = ../common/libcommon.a
 
-PROG=	moptrace
-SRCS=	moptrace.c print.c cmp.c get.c mopdef.c nma.c device.c version.c pf.c \
-	loop-bsd.c dl.c rc.c
-MAN=	moptrace.1
-CFLAGS+= -I${.CURDIR} -I${.CURDIR}/.. -I${.CURDIR}/../common
-CLEANFILES= version.c version.h
-LDADD=	-lkvm
-.PATH:	${.CURDIR}/../common
+CPPFLAGS = -I..
 
-version.c version.h: ${.CURDIR}/../common/VERSION
-	rm -f version.c; \
-	sed 's/.*/char version[] = "&";/' ${.ALLSRC} > version.c
-	set `sed 's/\([0-9]*\)\.\([0-9]*\).*/\1 \2/' ${.ALLSRC}` ; \
-		{ echo '#define VERSION_MAJOR' $$1 ; \
-		  echo '#define VERSION_MINOR' $$2 ; } > version.h
+all: $(PROGS)
 
+moptrace: $(OBJS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o moptrace $(OBJS) $(LIBS)
 
-.include <bsd.prog.mk>
+../common/libcommon.a:
+	cd ../common && $(MAKE) libcommon.a
+
+.c.o:
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
+
+clean:
+	rm -f core $(PROGS) *.o

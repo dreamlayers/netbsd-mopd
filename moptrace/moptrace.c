@@ -38,15 +38,15 @@ static char rcsid[] = "$Id: moptrace.c,v 1.10 1996/08/05 07:49:14 moj Exp $";
  *		moptrace [ -d ] [ -3 | -4 ] interface
  */
 
-#include "os.h"
-#include "common/common.h"
-#include "common/mopdef.h"
-#include "common/device.h"
-#include "common/print.h"
-#include "common/pf.h"
-#include "common/dl.h"
-#include "common/rc.h"
-#include "common/get.h"
+#include <common/os.h>
+#include <common/common.h>
+#include <common/mopdef.h>
+#include <common/device.h>
+#include <common/print.h>
+#include <common/pf.h>
+#include <common/dl.h>
+#include <common/rc.h>
+#include <common/get.h>
 
 /*
  * The list of all interfaces that are being listened to. 

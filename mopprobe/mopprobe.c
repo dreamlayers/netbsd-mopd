@@ -38,15 +38,15 @@ static char rcsid[] = "$Id: mopprobe.c,v 1.11 1996/08/11 22:16:10 moj Exp $";
  *		mopprobe [ -3 | -4 ] interface
  */
 
-#include "os.h"
-#include "common/common.h"
-#include "common/mopdef.h"
-#include "common/device.h"
-#include "common/print.h"
-#include "common/get.h"
-#include "common/cmp.h"
-#include "common/pf.h"
-#include "common/nmadef.h"
+#include <common/os.h>
+#include <common/common.h>
+#include <common/mopdef.h>
+#include <common/device.h>
+#include <common/print.h>
+#include <common/get.h>
+#include <common/cmp.h>
+#include <common/pf.h>
+#include <common/nmadef.h>
 
 /*
  * The list of all interfaces that are being listened to.  rarp_loop()

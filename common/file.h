@@ -33,6 +33,8 @@
 #ifndef _FILE_H_
 #define _FILE_H_
 
+extern int fileinfo;
+
 #ifdef NO__P
 void	mopFilePutLX   (/* u_char *, int, u_long, int */);
 void	mopFilePutBX   (/* u_char *, int, u_long, int */);

@@ -1,10 +1,19 @@
+PROGS = mopa.out
+OBJS = mopa.out.o
+LIBS = ../common/libcommon.a
 
-#	$Id: Makefile,v 1.3 1996/08/16 22:44:35 moj Exp $
+CPPFLAGS = -I..
 
-PROG=	mopa.out
-SRCS=	mopa.out.c file.c
+all: $(PROGS)
 
-CFLAGS+= -I${.CURDIR} -I${.CURDIR}/.. -I${.CURDIR}/../common
-.PATH:	${.CURDIR}/../common
+mopa.out: $(OBJS) $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o mopa.out $(OBJS) $(LIBS)
 
-.include <bsd.prog.mk>
+../common/libcommon.a:
+	cd ../common && $(MAKE) libcommon.a
+
+.c.o:
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
+
+clean:
+	rm -f core $(PROGS) *.o

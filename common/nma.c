@@ -32,7 +32,7 @@ static char rcsid[] = "$Id: nma.c,v 1.5 1995/09/28 13:37:10 moj Exp $";
 #endif
 
 #include <stddef.h>
-#include "common/nmadef.h"
+#include "nmadef.h"
 
 struct commDev {
 	int		val;

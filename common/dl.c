@@ -32,9 +32,9 @@ static char rcsid[] = "$Id: dl.c,v 1.7 1996/08/05 07:37:53 moj Exp $";
 #endif
 
 #include "os.h"
-#include "common/get.h"
-#include "common/print.h"
-#include "common/mopdef.h"
+#include "get.h"
+#include "print.h"
+#include "mopdef.h"
 
 void
 mopDumpDL(fd, pkt, trans)

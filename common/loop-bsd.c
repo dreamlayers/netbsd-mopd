@@ -37,13 +37,15 @@ static char rcsid[] = "$Id: loop-bsd.c,v 1.11 1996/08/16 22:41:28 moj Exp $";
 #if defined(__bsdi__) || defined(__FreeBSD__)
 #include <sys/time.h>
 #endif
+#if !defined(__linux__)
 #include <net/bpf.h>
+#endif
 #include <sys/ioctl.h>
 #include <sys/errno.h>
 
 #include "os.h"
-#include "common/common.h"
-#include "common/mopdef.h"
+#include "common.h"
+#include "mopdef.h"
 
 int
 mopOpenRC(p, trans)
@@ -110,12 +112,16 @@ Loop()
 		syslog(LOG_ERR, "no interfaces");
 		exit(0);
 	}
+#ifndef __linux__
 	if (iflist->fd != -1) {
 		if (ioctl(iflist->fd, BIOCGBLEN, (caddr_t) & bufsize) < 0) {
 			syslog(LOG_ERR, "BIOCGBLEN: %m");
 			exit(0);
 	        }
 	}
+#else
+	bufsize = 8192;
+#endif
 	buf = (u_char *) malloc((unsigned) bufsize);
 	if (buf == 0) {
 		syslog(LOG_ERR, "malloc: %m");
@@ -166,6 +172,7 @@ Loop()
 #define bhp ((struct bpf_hdr *)bp)
 			bp = buf;
 			ep = bp + cc;
+#ifndef __linux__
 			while (bp < ep) {
 				register int caplen, hdrlen;
 
@@ -174,6 +181,11 @@ Loop()
 				mopProcess(ii, bp + hdrlen);
 				bp += BPF_WORDALIGN(hdrlen + caplen);
 			}
+#else
+			if (bp < ep) {
+				mopProcess(ii,buf);
+			}
+#endif
 		}
 	}
 }

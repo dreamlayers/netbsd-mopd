@@ -1,0 +1,19 @@
+This is a port of Mats O Jansson's mopd to linux, special thanx to David 
+Hornsby from the University of Melbourne for the use of pf.c from the 
+arns package.
+
+I have booted test images on my Vaxstation 3100 from my PC running Linux 
+2.0.20 with an AE-2 NE2000 compatable card. There are bound to be bugs, 
+especially with dealing with different network cards etc. Please report 
+any bugs you find in this linux version to me and I will do the best I 
+can to fix them. 
+
+To compile mopd, simply go into the directory and type 'make'. The man 
+files have also been included from the BSD version of mopd.
+
+Enjoy
+
+Karl Maftoum
+
+u963870@student.canberra.edu.au
+

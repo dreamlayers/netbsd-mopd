@@ -32,7 +32,7 @@ static char rcsid[] = "$Id: mopdef.c,v 1.2 1995/10/02 16:50:22 moj Exp $";
 #endif
 
 #define MOPDEF_SURPESS_EXTERN
-#include "common/mopdef.h"
+#include "mopdef.h"
 
 char dl_mcst[6] = MOP_DL_MULTICAST;	/* Dump/Load Multicast         */
 char rc_mcst[6] = MOP_RC_MULTICAST;	/* Remote Console Multicast    */

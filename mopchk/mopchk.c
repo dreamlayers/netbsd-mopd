@@ -37,12 +37,12 @@ static char rcsid[] = "$Id: mopchk.c,v 1.5 1996/08/16 22:46:55 moj Exp $";
  * Usage:	mopchk [-a] [-v] [filename...]
  */
 
-#include "os.h"
-#include "common/common.h"
-#include "common/mopdef.h"
-#include "common/device.h"
-#include "common/pf.h"
-#include "common/file.h"
+#include <common/os.h>
+#include <common/common.h>
+#include <common/mopdef.h>
+#include <common/device.h>
+#include <common/pf.h>
+#include <common/file.h>
 
 /*
  * The list of all interfaces that are being listened to.  rarp_loop()
@@ -62,7 +62,8 @@ int     AllFlag = 0;		/* listen on "all" interfaces  */
 int	VersionFlag = 0;	/* Show version */
 int	promisc = 0;		/* promisc mode not needed */
 char	*Program;
-char	version[];
+
+extern char version[];
 
 void
 main(argc, argv)
@@ -100,6 +101,8 @@ main(argc, argv)
 			/* NOTREACHED */
 		}
 	}
+
+	fileinfo = 1;
 	
 	if (VersionFlag)
 		printf("%s: Version %s\n",Program,version);
