@@ -72,7 +72,7 @@ int     oflag = 0;		/* print only once             */
 int	promisc = 1;		/* Need promisc mode           */
 char	*Program;
 
-void
+int
 main(argc, argv)
 	int     argc;
 	char  **argv;
@@ -129,6 +129,7 @@ main(argc, argv)
 		deviceInitOne(interface);
 
 	Loop();
+	return 0;
 }
 
 void

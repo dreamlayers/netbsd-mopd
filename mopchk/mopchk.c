@@ -65,7 +65,7 @@ char	*Program;
 
 extern char version[];
 
-void
+int
 main(argc, argv)
 	int     argc;
 	char  **argv;
@@ -158,7 +158,7 @@ main(argc, argv)
 			};
 		}
 	}
-
+	return 0;
 }
 
 void

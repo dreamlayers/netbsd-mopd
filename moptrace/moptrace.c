@@ -71,7 +71,7 @@ int	Not4Flag = 0;		/* Ignore MOP V4 messages      */
 int	promisc = 1;		/* Need promisc mode           */
 char	*Program;
 
-void
+int
 main(argc, argv)
 	int     argc;
 	char  **argv;
@@ -126,6 +126,7 @@ main(argc, argv)
 		deviceInitOne(interface);
 
 	Loop();
+	return 0;
 }
 
 void
