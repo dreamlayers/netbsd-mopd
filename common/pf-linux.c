@@ -185,6 +185,11 @@ int typ, mode;
   strncpy(socklist[s].sa.sa_data, interface, sizeof(socklist[s].sa.sa_data));
   socklist[s].iflen = strlen(interface);
 
+  if (bind(s, &socklist[s].sa, sizeof(socklist[s].sa)) < 0) {
+    syslog(LOG_ERR, "pfInit: %s: bind: %m", interface);
+    exit(1);
+  }
+
   return(s);
 }
 
