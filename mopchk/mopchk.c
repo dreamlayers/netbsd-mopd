@@ -73,7 +73,7 @@ main(argc, argv)
 	int     op, i, fd;
 	char   *filename;
 	struct if_info *ii;
-	int	err, aout;
+	int	err;
 
 	extern int optind, opterr;
 
@@ -138,25 +138,31 @@ main(argc, argv)
 		fd = open(filename, O_RDONLY, 0);
 		if (fd == -1) {
 			printf("Unknown file.\n");
-		} else {
-			err = CheckAOutFile(fd);
-			if (err == 0) {
-				if (GetAOutFileInfo(fd, 0, 0, 0, 0,
-						    0, 0, 0, 0, &aout) < 0) {
-					printf("Some failure in GetAOutFileInfo\n");
-					aout = -1;
-				}
-			} else {
-				aout = -1;
-			}
-			if (aout == -1)
-				err = CheckMopFile(fd);
-			if (aout == -1 && err == 0) {
-				if (GetMopFileInfo(fd, 0, 0) < 0) {
-					printf("Some failure in GetMopFileInfo\n");
-				}
-			};
+			continue;
 		}
+
+		err = CheckELFFile(fd);
+		if (err == 0) {
+			if (GetELFFileInfo(fd, 0, 0, 0, 0) < 0) {
+				printf("Some failure in GetELFFileInfo\n");
+			}
+			continue;
+		}
+
+		err = CheckAOutFile(fd);
+		if (err == 0) {
+			if (GetAOutFileInfo(fd, 0, 0, 0, 0) < 0) {
+				printf("Some failure in GetAOutFileInfo\n");
+			}
+			continue;
+		}
+
+		err = CheckMopFile(fd);
+		if (err == 0) {
+			if (GetMopFileInfo(fd, 0, 0, 0, 0) < 0) {
+				printf("Some failure in GetMopFileInfo\n");
+			}
+		};
 	}
 	return 0;
 }

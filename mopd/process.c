@@ -266,14 +266,11 @@ mopStartLoad(dst, src, dl_rpr, trans)
 	GetFileInfo(dllist[slot].ldfd,
 		    &dllist[slot].loadaddr,
 		    &dllist[slot].xferaddr,
-		    &dllist[slot].aout,
-		    &dllist[slot].a_text, &dllist[slot].a_text_fill,
-		    &dllist[slot].a_data, &dllist[slot].a_data_fill,
-		    &dllist[slot].a_bss,  &dllist[slot].a_bss_fill);
+		    &dllist[slot].ftype,
+		    &dllist[slot].seg);
 
 	dllist[slot].nloadaddr = dllist[slot].loadaddr;
-	dllist[slot].lseek     = lseek(dllist[slot].ldfd,0L,SEEK_CUR);
-	dllist[slot].a_lseek   = 0;
+	dllist[slot].addr      = 0;
 
 	dllist[slot].count     = 0;
 	if (dllist[slot].dl_bsz >= MAX_ETH_PAYLOAD)
@@ -375,8 +372,6 @@ mopNextLoad(dst, src, new_count, trans)
 		return;
 	}
 
-	dllist[slot].lseek     = lseek(dllist[slot].ldfd,0L,SEEK_CUR);
-	
 	if (dllist[slot].dl_bsz >= MAX_ETH_PAYLOAD)
 		dllist[slot].dl_bsz = MAX_ETH_PAYLOAD;
 	

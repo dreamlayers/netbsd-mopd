@@ -72,6 +72,22 @@ static char rcsid[] = "$Id: file.c,v 1.4 1996/08/16 22:39:22 moj Exp $";
 #endif
 #endif
 
+#ifndef NOELF
+#include <libelf/libelf.h>
+#endif
+
+struct mopphdr {
+	off_t	offset;
+	u_long	paddr;
+	u_long	filesz;
+	u_long	memsz;
+	u_long	fill;
+};
+
+struct mopphdrs {
+	struct mopphdr p[MAXSEG];
+};
+
 int fileinfo;
 
 void
@@ -178,13 +194,15 @@ CheckMopFile(fd)
 }
 
 int
-GetMopFileInfo(fd, load, xfr)
-	int	fd;
+GetMopFileInfo(fd, load, xfr, ftype, seg)
+	int	fd, *ftype;
 	u_long	*load, *xfr;
+	struct segs *seg;
 {
 	u_char	header[512];
 	short	image_type;
-	u_long	load_addr, xfr_addr, isd, iha, hbcnt, isize;
+	u_long	load_addr, xfr_addr, isd, iha;
+	off_t	hbcnt, isize;
 
 	(void)lseek(fd, (off_t) 0, SEEK_SET);
 
@@ -307,6 +325,26 @@ GetMopFileInfo(fd, load, xfr)
 
 	if (xfr != NULL) {
 		*xfr  = xfr_addr;
+	}
+
+	if (seg != NULL) {
+		off_t	hsize;
+
+		hsize = hbcnt * 512;
+		if (!hsize || !isize) {
+			hsize = 512;
+			isize = lseek(fd, (off_t) 0, SEEK_END);
+			if (isize < 0)
+				return(-1);
+			isize -= hsize;
+		}
+
+		seg->s[SEG_TEXT].seek = hsize;
+		seg->s[SEG_TEXT].data = isize;
+	}
+
+	if (ftype != NULL) {
+		*ftype = FTYPE_MOP;
 	}
 
 	return(0);
@@ -463,11 +501,10 @@ CheckAOutFile(fd)
 
 /*###440 [cc] syntax error before `int'%%%*/
 int
-GetAOutFileInfo(fd, load, xfr, a_text, a_text_fill,
-		a_data, a_data_fill, a_bss, a_bss_fill, aout)
-	int	fd, *aout;
-	u_long	*load, *xfr, *a_text, *a_text_fill;
-	u_long	*a_data, *a_data_fill, *a_bss, *a_bss_fill;
+GetAOutFileInfo(fd, load, xfr, ftype, seg)
+	int	fd, *ftype;
+	u_long	*load, *xfr;
+	struct segs *seg;
 {
 #ifdef NOAOUT
 	return(-1);
@@ -631,7 +668,7 @@ GetAOutFileInfo(fd, load, xfr, a_text, a_text_fill,
 
 /*###608 [cc] `load' undeclared (first use this function)%%%*/
 	if (load != NULL) {
-		*load   = 0;
+		*load   = N_TXTADDR(ex);
 	}
 
 /*###612 [cc] `xfr' undeclared (first use this function)%%%*/
@@ -639,106 +676,321 @@ GetAOutFileInfo(fd, load, xfr, a_text, a_text_fill,
 		*xfr    = ex.a_entry;
 	}
 
-/*###616 [cc] `a_text' undeclared (first use this function)%%%*/
-	if (a_text != NULL) {
-		*a_text = ex.a_text;
-	}
+/*###616 [cc] `seg' undeclared (first use this function)%%%*/
+	if (seg != NULL) {
+		u_long	fill;
 
-/*###620 [cc] `a_text_fill' undeclared (first use this function)%%%*/
-	if (a_text_fill != NULL) {
+		seg->s[SEG_TEXT].seek = N_TXTOFF(ex);
+		seg->s[SEG_TEXT].data = ex.a_text;
 		if (magic == ZMAGIC || magic == NMAGIC) {
-			*a_text_fill = clbytes - (ex.a_text & clofset);
-			if (*a_text_fill == clbytes) {
-				*a_text_fill = 0;
+			fill = clbytes - (ex.a_text & clofset);
+			if (fill == clbytes) {
+				fill = 0;
 			}
-		} else {
-			*a_text_fill = 0;
+			seg->s[SEG_TEXT].fill = fill;
 	        }
-	}
 
-/*###631 [cc] `a_data' undeclared (first use this function)%%%*/
-	if (a_data != NULL) {
-		*a_data = ex.a_data;
-	}
-
-/*###635 [cc] `a_data_fill' undeclared (first use this function)%%%*/
-	if (a_data_fill != NULL) {
+		seg->s[SEG_DATA].seek = N_DATOFF(ex);
+		seg->s[SEG_DATA].data = ex.a_data;
 		if (magic == ZMAGIC || magic == NMAGIC) {
-			*a_data_fill = clbytes - (ex.a_data & clofset);
-			if (*a_data_fill == clbytes) {
-				*a_data_fill = 0;
+			fill = clbytes - (ex.a_data & clofset);
+			if (fill == clbytes) {
+				fill = 0;
 			}
-		} else {
-			*a_data_fill = 0;
+			seg->s[SEG_DATA].fill = fill;
 	        }
-	}
 
-/*###646 [cc] `a_bss' undeclared (first use this function)%%%*/
-	if (a_bss != NULL) {
-		*a_bss  = ex.a_bss;
-	}
-
-/*###650 [cc] `a_bss_fill' undeclared (first use this function)%%%*/
-	if (a_bss_fill != NULL) {
 		if (magic == ZMAGIC || magic == NMAGIC) {
-			*a_bss_fill = clbytes - (ex.a_bss & clofset);
-			if (*a_bss_fill == clbytes) {
-				*a_bss_fill = 0;
-			}
-		} else {
-			*a_bss_fill = clbytes -
-				((ex.a_text+ex.a_data+ex.a_bss) & clofset);
-			if (*a_text_fill == clbytes) {
-				*a_text_fill = 0;
-			}
+			fill = clbytes - (ex.a_bss & clofset);
+	        } else {
+			fill = clbytes -
+			       ((ex.a_text + ex.a_data + ex.a_bss) & clofset);
 	        }
+		if (fill == clbytes) {
+			fill = 0;
+		}
+		seg->s[SEG_BSS].fill = ex.a_bss + fill;
 	}
 
-/*###665 [cc] `aout' undeclared (first use this function)%%%*/
-	if (aout != NULL) {
-		*aout = mid;
+/*###665 [cc] `ftype' undeclared (first use this function)%%%*/
+	if (ftype != NULL) {
+		*ftype = FTYPE_AOUT;
 	}
 
 	return(0);
 #endif NOAOUT
 }
 
+#ifndef NOELF
+void
+sortELFphdrs(p, l, r)
+	struct mopphdrs *p;
+	int	l, r;
+{
+	struct mopphdr tmp;
+	int	lp = l, rp = r, mp = (l + r) / 2;
+
+	do {
+		while (p->p[lp].paddr < p->p[mp].paddr)
+			lp++;
+		while (p->p[mp].paddr < p->p[rp].paddr)
+			rp--;
+		if (lp <= rp) {
+			tmp = p->p[lp];
+			p->p[lp] = p->p[rp];
+			p->p[rp] = tmp;
+			lp++;
+			rp--;
+		}
+	} while (lp <= rp);
+	if (l < rp)
+		sortELFphdrs(p, l, rp);
+	if (lp < r)
+		sortELFphdrs(p, lp, r);
+}
+#endif /* NOELF */
+
+int
+CheckELFFile(fd)
+	int	fd;
+{
+#ifdef NOELF
+	return(-1);
+#else
+	Elf	*elf;
+
+	if (elf_version(EV_CURRENT) == EV_NONE)
+		return(-1);
+
+	elf = elf_begin(fd, ELF_C_READ, NULL);
+	if (!elf)
+		return(-1);
+
+	if (elf_kind(elf) != ELF_K_ELF) {
+		elf_end(elf);
+		return(-1);
+	}
+
+	elf_end(elf);
+	return(0);
+#endif /* NOELF */
+}
+
+int
+GetELFFileInfo(fd, load, xfr, ftype, seg)
+	int	fd, *ftype;
+	u_long	*load, *xfr;
+	struct segs *seg;
+{
+#ifdef NOELF
+	return(-1);
+#else
+	struct mopphdrs p;
+	Elf	*elf;
+	Elf32_Ehdr *ehdr;
+	Elf32_Phdr *phdr;
+	Elf64_Ehdr *e64hdr;
+	Elf64_Phdr *p64hdr;
+	char	ei_class;
+	char	ei_data;
+	int	e_type;
+	u_long	e_entry;
+	int	e_phnum;
+	long	p_type;
+	int	i, j;
+
+	elf = elf_begin(fd, ELF_C_READ, NULL);
+	if (!elf)
+		return(-1);
+
+	ehdr = elf32_getehdr(elf);
+	phdr = elf32_getphdr(elf);
+	e64hdr = elf64_getehdr(elf);
+	p64hdr = elf64_getphdr(elf);
+
+	if ((!ehdr || !phdr) && (!e64hdr || !p64hdr)) {
+		elf_end(elf);
+		return(-1);
+	}
+
+	e_type = ehdr ? ehdr->e_type : e64hdr->e_type;
+	if (e_type != ET_EXEC) {
+		if (fileinfo)
+			printf("ELF non-executable, not supported\n");
+		elf_end(elf);
+		return(-1);
+	}
+
+	e_entry = ehdr ? ehdr->e_entry : e64hdr->e_entry;
+
+	bzero(&p, sizeof(p));
+
+	i = 0;
+	j = 0;
+	e_phnum = ehdr ? ehdr->e_phnum : e64hdr->e_phnum;
+	while (i < e_phnum) {
+
+		p_type = phdr ? phdr->p_type : p64hdr->p_type;
+		if (p_type == PT_DYNAMIC) {
+			if (fileinfo)
+				printf("ELF dynamic executable, "
+				       "not supported\n");
+			elf_end(elf);
+			return(-1);
+		}
+
+		if (p_type == PT_LOAD) {
+
+			if (j >= MAXSEG) {
+				if (fileinfo)
+					printf("ELF executable, "
+					       "over %u segments, "
+					       "not supported\n", MAXSEG);
+				elf_end(elf);
+				return(-1);
+			}
+
+			if (phdr) {
+				p.p[j].offset = phdr->p_offset;
+				p.p[j].paddr = phdr->p_paddr;
+				p.p[j].filesz = phdr->p_filesz;
+				p.p[j].memsz = phdr->p_memsz;
+			} else {
+				p.p[j].offset = p64hdr->p_offset;
+				p.p[j].paddr = p64hdr->p_paddr;
+				p.p[j].filesz = p64hdr->p_filesz;
+				p.p[j].memsz = p64hdr->p_memsz;
+			}
+
+			j++;
+		}
+
+		if (phdr)
+			phdr++;
+		else
+			p64hdr++;
+		i++;
+	};
+	if (!j) {
+		if (fileinfo)
+			printf("ELF executable, no segments to load\n");
+		elf_end(elf);
+		return(-1);
+	}
+
+	sortELFphdrs(&p, 0, j - 1);
+
+	for (i = 0; i < j; i++) {
+		p.p[i].fill = p.p[i].memsz - p.p[i].filesz;
+		if (i > 0)
+			p.p[i - 1].fill += p.p[i].paddr -
+					   (p.p[i - 1].paddr +
+					    p.p[i - 1].memsz);
+		if (seg != NULL) {
+			seg->s[i].seek = p.p[i].offset;
+			seg->s[i].data = p.p[i].filesz;
+			seg->s[i].fill = p.p[i].fill;
+			if (i > 0)
+				seg->s[i - 1].fill = p.p[i - 1].fill;
+		}
+	};
+
+	if (load != NULL) {
+		*load	= p.p[0].paddr;
+	}
+	if (xfr != NULL) {
+		*xfr	= e_entry;
+	}
+
+	if (fileinfo) {
+		char *clstr = "";
+		char *dtstr = "";
+
+		ei_class = ehdr ? ehdr->e_ident[EI_CLASS] :
+				  e64hdr->e_ident[EI_CLASS];
+		ei_data = ehdr ? ehdr->e_ident[EI_DATA] :
+				 e64hdr->e_ident[EI_DATA];
+		switch (ei_class) {
+		case ELFCLASS32:
+			clstr = " 32-bit";
+			break;
+		case ELFCLASS64:
+			clstr = " 64-bit";
+			break;
+		default:
+			;
+		}
+		switch (ei_data) {
+		case ELFDATA2LSB:
+			dtstr = " LSB";
+			break;
+		case ELFDATA2MSB:
+			dtstr = " MSB";
+			break;
+		default:
+			;
+		}
+		printf("ELF%s%s executable\n", clstr, dtstr);
+		for (i = 0; i < j; i++)
+		printf("Size of seg #%02d:    %08x (+ %08x fill)\n",
+			       i, p.p[i].filesz, p.p[i].fill);
+		printf("Load Address:       %08x\n", p.p[0].paddr);
+		printf("Transfer Address:   %08x\n", e_entry);
+	}
+
+	if (ftype != NULL) {
+		*ftype = FTYPE_ELF;
+	}
+
+	elf_end(elf);
+
+	return(0);
+#endif /* NOELF */
+}
+
 /*###673 [cc] syntax error before `int'%%%*/
 int
-GetFileInfo(fd, load, xfr, aout,
-	    a_text, a_text_fill, a_data, a_data_fill, a_bss, a_bss_fill)
-	int	fd, *aout;
-	u_long	*load, *xfr, *a_text, *a_text_fill;
-	u_long	*a_data, *a_data_fill, *a_bss, *a_bss_fill;
+GetFileInfo(fd, load, xfr, ftype, seg)
+	int	fd, *ftype;
+	u_long	*load, *xfr;
+	struct segs *seg;
 {
 	int	err;
+
+	*ftype = FTYPE_NONE;
+	bzero(seg, sizeof(*seg));
+
+	err = CheckELFFile(fd);
+
+	if (err == 0) {
+		err = GetELFFileInfo(fd, load, xfr, ftype, seg);
+		if (err != 0) {
+			return(-1);
+		}
+		return(0);
+	}
 
 	err = CheckAOutFile(fd);
 
 	if (err == 0) {
-		err = GetAOutFileInfo(fd, load, xfr,
-				      a_text, a_text_fill,
-				      a_data, a_data_fill,
-				      a_bss, a_bss_fill,
-				      aout);
+		err = GetAOutFileInfo(fd, load, xfr, ftype, seg);
 		if (err != 0) {
 			return(-1);
 		}
-	} else {
-		err = CheckMopFile(fd);
-		
-		if (err == 0) {
-			err = GetMopFileInfo(fd, load, xfr);
-			if (err != 0) {
-				return(-1);
-			}
-			*aout = -1;
-		} else {
-			return(-1);
-		}
+		return(0);
 	}
 
-	return(0);
+	err = CheckMopFile(fd);
+
+	if (err == 0) {
+		err = GetMopFileInfo(fd, load, xfr, ftype, seg);
+		if (err != 0) {
+			return(-1);
+		}
+		return(0);
+	}
+
+	return(-1);
 }
 
 ssize_t
@@ -748,20 +1000,20 @@ mopFileRead(dlslot, buf)
 	u_char	*buf;
 {
 	ssize_t len, outlen;
-	int	bsz;
+	int	bsz, i;
 	long	pos, notdone, total;
 
-/*###719 [cc] `dlslot' undeclared (first use this function)%%%*/
-	if (dlslot->aout == -1) {
-/*###720 [cc] `buf' undeclared (first use this function)%%%*/
-		len = read(dlslot->ldfd,buf,dlslot->dl_bsz);
-	} else {
-		bsz = dlslot->dl_bsz;
-		pos = dlslot->a_lseek;
-		len = 0;
+	bsz = dlslot->dl_bsz;
+	pos = dlslot->addr;
+	total = 0;
+	len = 0;
 
-		total = dlslot->a_text;
-		
+	i = 0;
+	while (i < MAXSEG) {
+		if (pos == total)
+			lseek(dlslot->ldfd, dlslot->seg.s[i].seek, SEEK_SET);
+
+		total += dlslot->seg.s[i].data;
 		if (pos < total) {
 			notdone = total - pos;
 			if (notdone <= bsz) {
@@ -776,8 +1028,11 @@ mopFileRead(dlslot, buf)
 			bsz = bsz - outlen;
 		}
 
-		total = total + dlslot->a_text_fill;
+		dlslot->addr = pos;
+		if (!bsz)
+			break;
 
+		total += dlslot->seg.s[i].fill;
 		if ((bsz > 0) && (pos < total)) {
 			notdone = total - pos;
 			if (notdone <= bsz) {
@@ -792,72 +1047,11 @@ mopFileRead(dlslot, buf)
 			bsz = bsz - outlen;
 		}
 
-		total = total + dlslot->a_data;
-		
-		if ((bsz > 0) && (pos < total)) {
-			notdone = total - pos;
-			if (notdone <= bsz) {
-/*###760 [cc] subscripted value is neither array nor pointer%%%*/
-				outlen = read(dlslot->ldfd,&buf[len],notdone);
-			} else {
-/*###762 [cc] subscripted value is neither array nor pointer%%%*/
-				outlen = read(dlslot->ldfd,&buf[len],bsz);
-			}
-			len = len + outlen;
-			pos = pos + outlen;
-			bsz = bsz - outlen;
-		}
+		dlslot->addr = pos;
+		if (!bsz)
+			break;
 
-		total = total + dlslot->a_data_fill;
-
-		if ((bsz > 0) && (pos < total)) {
-			notdone = total - pos;
-			if (notdone <= bsz) {
-				outlen = notdone;
-			} else {
-				outlen = bsz;
-			}
-/*###778 [cc] subscripted value is neither array nor pointer%%%*/
-			bzero(&buf[len],outlen);
-			len = len + outlen;
-			pos = pos + outlen;
-			bsz = bsz - outlen;
-		}
-		
-		total = total + dlslot->a_bss;
-
-		if ((bsz > 0) && (pos < total)) {
-			notdone = total - pos;
-			if (notdone <= bsz) {
-				outlen = notdone;
-			} else {
-				outlen = bsz;
-			}
-/*###793 [cc] subscripted value is neither array nor pointer%%%*/
-			bzero(&buf[len],outlen);
-			len = len + outlen;
-			pos = pos + outlen;
-			bsz = bsz - outlen;
-		}
-		
-		total = total + dlslot->a_bss_fill;
-
-		if ((bsz > 0) && (pos < total)) {
-			notdone = total - pos;
-			if (notdone <= bsz) {
-				outlen = notdone;
-			} else {
-				outlen = bsz;
-			}
-/*###808 [cc] subscripted value is neither array nor pointer%%%*/
-			bzero(&buf[len],outlen);
-			len = len + outlen;
-			pos = pos + outlen;
-			bsz = bsz - outlen;
-		}
-		
-		dlslot->a_lseek = pos;
-
+		i++;
 	}
 
 	return(len);

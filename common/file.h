@@ -42,12 +42,12 @@ u_long	mopFileGetLX   (/* u_char *, int, int */);
 u_long	mopFileGetBX   (/* u_char *, int, int */);
 void	mopFileSwapX   (/* u_char *, int, int */);
 int	CheckMopFile   (/* int */);
-int	GetMopFileInfo (/* int, u_long *, u_long * */);
+int	GetMopFileInfo (/* int, u_long *, u_long *, int *, struct segs * */);
 int	CheckAOutFile  (/* int */);
-int	GetAOutFileInfo(/* int, u_long *, u_long *, u_long *, u_long *,
-			   u_long *, u_long *, u_long *, u_long * */);
-int	GetFileInfo    (/* int, u_long *, u_long *, int *, u_long *, u_long *,
-			   u_long *, u_long *, u_long *, u_long * */);
+int	GetAOutFileInfo(/* int, u_long *, u_long *, int *, struct segs * */);
+int	CheckELFFile   (/* int */);
+int	GetELFFileInfo (/* int, u_long *, u_long *, int *, struct segs * */);
+int	GetFileInfo    (/* int, u_long *, u_long *, int *, struct segs * */);
 #else
 __BEGIN_DECLS
 void	mopFilePutLX    __P((u_char *, int, u_long, int));
@@ -56,13 +56,12 @@ u_long	mopFileGetLX    __P((u_char *, int, int));
 u_long	mopFileGetBX    __P((u_char *, int, int));
 void	mopFileSwapX    __P((u_char *, int, int));
 int	CheckMopFile    __P((int));
-int	GetMopFileInfo  __P((int, u_long *, u_long *));
+int	GetMopFileInfo  __P((int, u_long *, u_long *, int *, struct segs *));
 int	CheckAOutFile   __P((int));
-int	GetAOutFileInfo __P((int, u_long *, u_long *, u_long *, u_long *,
-			     u_long *, u_long *, u_long *, u_long *, int *));
-int	GetFileInfo     __P((int, u_long *, u_long *, int *,
-			     u_long *, u_long *, u_long *, u_long *,
-			     u_long *, u_long *));
+int	GetAOutFileInfo __P((int, u_long *, u_long *, int *, struct segs *));
+int	CheckELFFile    __P((int));
+int	GetELFFileInfo  __P((int, u_long *, u_long *, int *, struct segs *));
+int	GetFileInfo     __P((int, u_long *, u_long *, int *, struct segs *));
 __END_DECLS
 #endif
 

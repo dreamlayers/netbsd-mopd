@@ -71,6 +71,28 @@ struct if_info {
 #define DL_STATUS_SENT_MLD	 2
 #define DL_STATUS_SENT_PLT	 3
 
+#define FTYPE_NONE	0		/* unindentified image		*/
+#define FTYPE_MOP	1		/* DEC MOP image		*/
+#define FTYPE_AOUT	2		/* a.out executable		*/
+#define FTYPE_COFF	3		/* COFF executable		*/
+#define FTYPE_ELF	4		/* ELF executable		*/
+
+#define SEG_TEXT	0		/* Segment table entry numbers	*/
+#define SEG_DATA	1		/* for file types that use	*/
+#define SEG_BSS		2		/* fixed segments		*/
+
+#define MAXSEG		16		/* Max. number of program segments */
+
+struct seg {
+	off_t	seek;			/* File offset of segment	*/
+	u_long	data;			/* Size of segment data		*/
+	u_long	fill;			/* Size of segment fill		*/
+};
+
+struct segs {
+	struct seg s[MAXSEG];		/* File segments		*/
+};
+
 struct dllist {
 	u_char	status;			/* Status byte			*/
 	struct if_info *ii;		/* interface pointer		*/
@@ -82,15 +104,9 @@ struct dllist {
 	u_long	loadaddr;		/* Load Address			*/
 	u_long	xferaddr;		/* Transfer Address		*/
 	u_long	nloadaddr;		/* Next Load Address		*/
-	long	lseek;			/* Seek before last read	*/
-	int	aout;			/* Is it an a.out file		*/
-	u_long	a_text;			/* Size of text segment		*/
-	u_long	a_text_fill;		/* Size of text segment fill	*/
-	u_long	a_data;			/* Size of data segment		*/
-	u_long	a_data_fill;		/* Size of data segment fill	*/
-	u_long	a_bss;			/* Size of bss segment		*/
-	u_long	a_bss_fill;		/* Size of bss segment fill	*/
-	long	a_lseek;		/* Keep track of pos in newfile */
+	int	ftype;			/* File type			*/
+	struct segs seg;		/* File segments		*/
+	u_long	addr;			/* Current relative address	*/
 };
 
 #endif _COMMON_H_
