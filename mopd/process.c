@@ -47,7 +47,7 @@ static char rcsid[] = "$Id: process.c,v 1.21 1996/08/22 17:04:07 moj Exp $";
 
 #define SEND_REAL_HOSTNAME
 
-#define MAX_ETH_PAYLOAD 1492
+#define MAX_ETH_PAYLOAD 1500
 
 extern u_char	buf[];
 extern int	DebugFlag;
@@ -276,11 +276,15 @@ mopStartLoad(dst, src, dl_rpr, trans)
 	if (dllist[slot].dl_bsz >= MAX_ETH_PAYLOAD)
 		dllist[slot].dl_bsz = MAX_ETH_PAYLOAD;
 	if (dllist[slot].dl_bsz == 1030)	/* VS/uVAX 2000 needs this */
-		dllist[slot].dl_bsz = 1000;
+		dllist[slot].dl_bsz = 1010;
 	if (dllist[slot].dl_bsz == 0)           /* Needed by "big" VAXen */
-		dllist[slot].dl_bsz = MAX_ETH_PAYLOAD;
+		dllist[slot].dl_bsz = MOP_K_DLBSZ_DEFAULT;
 	if (trans == TRANS_8023)
-		dllist[slot].dl_bsz = dllist[slot].dl_bsz - 8;
+		if (dllist[slot].dl_bsz > MAX_ETH_PAYLOAD - 8)
+			dllist[slot].dl_bsz = MAX_ETH_PAYLOAD - 8;
+	if (trans == TRANS_ETHER)
+		dllist[slot].dl_bsz -= 2;	/* For packet length */
+	dllist[slot].dl_bsz -= 6;		/* For Memory Load header */
 
 	index = 0;
 	mopPutHeader(pkt, &index, dst, src, ptype, trans);
