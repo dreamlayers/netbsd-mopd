@@ -141,8 +141,8 @@ Loop()
 	}
 	while (1) {
 		listeners = fds;
-		if (select(maxfd + 1, &listeners, (struct fd_set *) 0,
-			(struct fd_set *) 0, (struct timeval *) 0) < 0) {
+		if (select(maxfd + 1, &listeners, (fd_set *) 0,
+			(fd_set *) 0, (struct timeval *) 0) < 0) {
 			syslog(LOG_ERR, "select: %m");
 			exit(0);
 		}
