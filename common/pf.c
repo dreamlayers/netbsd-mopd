@@ -67,7 +67,7 @@ static char rcsid[] = "$Id: pf.c,v 1.16 1996/08/06 14:19:48 moj Exp $";
  */
 
 extern int errno;
-extern int promisc;
+extern int nomulti;
 
 /*
  * Return information to device.c how to open device.
@@ -146,7 +146,8 @@ pfInit(interface, mode, protocol, typ)
       		syslog(LOG_ERR,"pfInit: %s is not ethernet", device);
 		return(-1);
 	}
-	if (promisc) {
+	if (!nomulti) {
+		syslog(LOG_WARNING,"pfInit: using promiscuous mode for multicast reception");
 		/* Set promiscuous mode. */
 		if (ioctl(fd, BIOCPROMISC, (caddr_t)0) < 0) {
       			syslog(LOG_ERR,"pfInit: BIOCPROMISC: %m");
