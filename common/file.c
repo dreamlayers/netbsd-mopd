@@ -276,7 +276,7 @@ GetMopFileInfo(fd, load, xfr, ftype, seg)
 			isize = (header[isd+ISD_W_PAGCNT+1]*256 +
 				 header[isd+ISD_W_PAGCNT]) * 512;
 			load_addr = (header[isd+ISD_V_VPN+1]*256 +
-				     header[isd+ISD_V_VPN]) * 512;
+				     header[isd+ISD_V_VPN]) * 512 | 0x80000000;
 			xfr_addr = (header[iha+IHA_L_TFRADR1+3]*0x1000000 +
 				    header[iha+IHA_L_TFRADR1+2]*0x10000 +
 				    header[iha+IHA_L_TFRADR1+1]*0x100 +
