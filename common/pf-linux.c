@@ -30,8 +30,10 @@
  *
  */
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <syslog.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
@@ -94,9 +96,28 @@ struct socklist {
 
 struct ifreq ifr;
 extern int errno;
-extern int promisc;
+extern int nomulti;
 
 struct RDS RDS[NUMRDS];
+
+struct mcastent {
+  char *interface;
+  u_char addr[6];
+  struct mcastent *next;
+};
+
+struct mcastent *mcastlist = NULL;
+int mcastreg = 0;
+
+void reg_cleanup();
+void sig_cleanup();
+
+volatile sig_atomic_t sig_in_progress = 0;
+void (*hnd_hup)();
+void (*hnd_int)();
+void (*hnd_quit)();
+void (*hnd_segv)();
+void (*hnd_term)();
 
 /*
  * establish protocol filter
@@ -190,6 +211,33 @@ u_char *addr;
 }
 
 /*
+ * add an interface, multicast address pair
+ * to the prune-on-exit list
+ *
+ */
+
+void
+pfRegMulti(interface, addr)
+char *interface;
+u_char *addr;
+{
+  struct mcastent **ml = &mcastlist;
+
+  while (*ml != NULL)
+    ml = &((*ml)->next);
+  if ((*ml = malloc(sizeof(struct mcastent))) == NULL) {
+    syslog(LOG_ERR, "pfRegMulti: %s: malloc: %m", interface);
+    exit(1);
+  }
+  (*ml)->next = NULL;
+  if (((*ml)->interface = strdup(interface)) == NULL) {
+    syslog(LOG_ERR, "pfRegMulti: %s: strdup: %m", interface);
+    exit(1);
+  }
+  memcpy(&((*ml)->addr), addr, 6);
+}
+
+/*
  * add a multicast address to the interface
  *
  */
@@ -203,6 +251,8 @@ u_char *addr;
   int sock;
 
 #ifdef	USE_SADDMULTI
+  if (nomulti)
+    return(0);
 
   strncpy(ifr.ifr_name, interface, sizeof (ifr.ifr_name) - 1);
   ifr.ifr_name[sizeof(ifr.ifr_name)] = 0;
@@ -215,11 +265,6 @@ u_char *addr;
   }
 #endif	UPFILT
 
-
-
-  ifr.ifr_addr.sa_family = AF_UNSPEC;
-  bcopy((char *)addr, ifr.ifr_addr.sa_data, 6);
-
   /*
    * open a socket, temporarily, to use for SIOC* ioctls
    *
@@ -228,10 +273,23 @@ u_char *addr;
     syslog(LOG_ERR, "pfAddMulti: %s: socket: %m", interface);
     return(-1);
   }
-  if (ioctl(sock, SIOCADDMULTI, (caddr_t)&ifr) < 0) {
-    syslog(LOG_ERR, "pfAddMulti: %s: SIOCADDMULTI: %m", interface);
-    close(sock);
+  if (ioctl(sock, SIOCGIFFLAGS, &ifr) < 0) {
+    syslog(LOG_ERR, "pfAddMulti: %s: SIOCGIFFLAGS: %m", interface);
     return(-1);
+  }
+  if (ifr.ifr_flags & IFF_MULTICAST) {
+    if (!mcastreg) {
+      reg_cleanup();
+      mcastreg = 1;
+    }
+    ifr.ifr_addr.sa_family = AF_UNSPEC;
+    bcopy((char *)addr, ifr.ifr_addr.sa_data, 6);
+    if (ioctl(sock, SIOCADDMULTI, (caddr_t)&ifr) < 0) {
+      syslog(LOG_ERR, "pfAddMulti: %s: SIOCADDMULTI: %m", interface);
+      close(sock);
+      return(-1);
+    } else
+      pfRegMulti(interface, addr);
   }
   close(sock);
 #endif	USE_SADDMULTI
@@ -256,9 +314,6 @@ u_char *addr;
   strncpy(ifr.ifr_name, interface, sizeof (ifr.ifr_name) - 1);
   ifr.ifr_name[sizeof(ifr.ifr_name)] = 0;
 
-  ifr.ifr_addr.sa_family = AF_UNSPEC;
-  bcopy((char *)addr, ifr.ifr_addr.sa_data, 6);
-
   /*
    * open a socket, temporarily, to use for SIOC* ioctls
    *
@@ -267,16 +322,44 @@ u_char *addr;
     syslog(LOG_ERR, "pfDelMulti: %s: socket: %m", interface);
     return(-1);
   }
-  if (ioctl(sock, SIOCDELMULTI, (caddr_t)&ifr) < 0) {
-    syslog(LOG_ERR, "pfDelMulti: %s: SIOCDELMULTI: %m", interface);
-    close(sock);
+  if (ioctl(sock, SIOCGIFFLAGS, &ifr) < 0) {
+    syslog(LOG_ERR, "pfDelMulti: %s: SIOCGIFFLAGS: %m", interface);
     return(-1);
+  }
+  if (ifr.ifr_flags & IFF_MULTICAST) {
+    ifr.ifr_addr.sa_family = AF_UNSPEC;
+    bcopy((char *)addr, ifr.ifr_addr.sa_data, 6);
+    if (ioctl(sock, SIOCDELMULTI, (caddr_t)&ifr) < 0) {
+      syslog(LOG_ERR, "pfDelMulti: %s: SIOCDELMULTI: %m", interface);
+      close(sock);
+      return(-1);
+    }
   }
   close(sock);
 #endif	USE_SADDMULTI
 
 
   return(0);
+}
+
+/*
+ * remove all registered multicast memeberships
+ *
+ */
+
+void
+pfPruneMulti()
+{
+  struct mcastent **ml = &mcastlist;
+
+  if (!mcastreg)
+    return;
+  mcastreg = 0;
+
+  while (*ml != NULL) {
+    pfDelMulti(-1, (*ml)->interface, (*ml)->addr);
+    ml = &((*ml)->next);
+  }
 }
 
 /*
@@ -358,6 +441,81 @@ u_char *buf;
     return(len);
 
   return(-1);
+}
+
+/*
+ * remove all registered multicast memeberships
+ * when killed
+ *
+ */
+
+void
+sig_cleanup(sig)
+int sig;
+{
+  void (*hnd)();
+  if (sig_in_progress)
+    raise(sig);
+  sig_in_progress = 1;
+
+  pfPruneMulti();
+
+  switch(sig) {
+  case SIGHUP:
+    hnd = hnd_hup;
+    break;
+  case SIGINT:
+    hnd = hnd_int;
+    break;
+  case SIGQUIT:
+    hnd = hnd_quit;
+    break;
+  case SIGSEGV:
+    hnd = hnd_segv;
+    break;
+  case SIGTERM:
+    hnd = hnd_term;
+    break;
+  default:
+    hnd = SIG_DFL;
+    break;
+  }
+  signal(sig, hnd);
+  raise(sig);
+}
+
+/*
+ * register multicast clean-up functions
+ *
+ */
+
+void
+reg_cleanup()
+{
+  if (atexit(pfPruneMulti) < 0) {
+    syslog(LOG_ERR, "pfAddMulti: atexit: %m");
+    exit(1);
+  }
+  if ((hnd_hup = signal(SIGHUP, sig_cleanup)) == SIG_IGN) {
+    signal(SIGHUP, SIG_IGN);
+    hnd_hup = SIG_DFL;
+  }
+  if ((hnd_int = signal(SIGINT, sig_cleanup)) == SIG_IGN) {
+    signal(SIGINT, SIG_IGN);
+    hnd_int = SIG_DFL;
+  }
+  if ((hnd_quit = signal(SIGQUIT, sig_cleanup)) == SIG_IGN) {
+    signal(SIGQUIT, SIG_IGN);
+    hnd_quit = SIG_DFL;
+  }
+  if ((hnd_segv = signal(SIGSEGV, sig_cleanup)) == SIG_IGN) {
+    signal(SIGSEGV, SIG_IGN);
+    hnd_segv = SIG_DFL;
+  }
+  if ((hnd_term = signal(SIGTERM, sig_cleanup)) == SIG_IGN) {
+    signal(SIGTERM, SIG_IGN);
+    hnd_term = SIG_DFL;
+  }
 }
 
 /*

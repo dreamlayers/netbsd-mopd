@@ -166,7 +166,17 @@ deviceOpen(ifname, proto, trans)
 		p->eaddr[4]= tmp.eaddr[4];
 		p->eaddr[5]= tmp.eaddr[5];
 #endif	/* DEV_NEW_CONF */
-	
+
+		switch (proto) {
+		case MOP_K_PROTO_RC:
+			pfAddMulti(-1,p->if_name,&rc_mcst[0]);
+			break;
+		case MOP_K_PROTO_DL:
+			pfAddMulti(-1,p->if_name,&dl_mcst[0]);
+			break;
+		default:
+			break;
+		}
 	}
 }
 

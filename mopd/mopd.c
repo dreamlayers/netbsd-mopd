@@ -72,7 +72,7 @@ int	ForegroundFlag = 0;	/* run in foreground          */
 int	VersionFlag = 0;	/* print version              */
 int	Not3Flag = 0;		/* Not MOP V3 messages.       */
 int	Not4Flag = 0;		/* Not MOP V4 messages.       */
-int	promisc = 1;		/* Need promisc mode    */
+int	nomulti = 0;		/* Need multicast mode        */
 char    *Program;
 
 int
@@ -94,7 +94,7 @@ main(argc, argv)
 	if (*Program == '-')
 		Program++;
 
-	while ((c = getopt(argc, argv, "34adfv")) != EOF)
+	while ((c = getopt(argc, argv, "34adfmv")) != EOF)
 		switch (c) {
 			case '3':
 				Not3Flag++;
@@ -110,6 +110,9 @@ main(argc, argv)
 				break;
 			case 'f':
 				ForegroundFlag++;
+				break;
+			case 'm':
+				nomulti++;
 				break;
 			case 'v':
 				VersionFlag++;
@@ -193,8 +196,8 @@ main(argc, argv)
 void
 Usage()
 {
-	(void) fprintf(stderr, "usage: %s -a [ -d -f -v ] [ -3 | -4 ]\n",Program);
-	(void) fprintf(stderr, "       %s [ -d -f -v ] [ -3 | -4 ] interface\n",Program);
+	(void) fprintf(stderr, "usage: %s -a [ -d -f -m -v ] [ -3 | -4 ]\n",Program);
+	(void) fprintf(stderr, "       %s [ -d -f -m -v ] [ -3 | -4 ] interface\n",Program);
 	exit(1);
 }
 

@@ -60,7 +60,7 @@ void   mopProcess    __P((struct if_info *, u_char *));
 
 int     AllFlag = 0;		/* listen on "all" interfaces  */
 int	VersionFlag = 0;	/* Show version */
-int	promisc = 0;		/* promisc mode not needed */
+int	nomulti = 1;		/* multicast mode not needed */
 char	*Program;
 
 extern char version[];

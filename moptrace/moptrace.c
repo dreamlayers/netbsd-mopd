@@ -68,7 +68,7 @@ int     AllFlag = 0;		/* listen on "all" interfaces  */
 int     DebugFlag = 0;		/* print debugging messages    */
 int	Not3Flag = 0;		/* Ignore MOP V3 messages      */
 int	Not4Flag = 0;		/* Ignore MOP V4 messages      */ 
-int	promisc = 1;		/* Need promisc mode           */
+int	nomulti = 0;		/* Need multicast mode         */
 char	*Program;
 
 int
@@ -93,7 +93,7 @@ main(argc, argv)
 	openlog(Program, LOG_PID | LOG_CONS, LOG_DAEMON);
 
 	opterr = 0;
-	while ((op = getopt(argc, argv, "34ad")) != EOF) {
+	while ((op = getopt(argc, argv, "34adm")) != EOF) {
 		switch (op) {
 		case '3':
 			Not3Flag++;
@@ -106,6 +106,9 @@ main(argc, argv)
 			break;
 		case 'd':
 			DebugFlag++;
+			break;
+		case 'm':
+			nomulti++;
 			break;
 		default:
 			Usage();
@@ -132,8 +135,8 @@ main(argc, argv)
 void
 Usage()
 {
-	(void) fprintf(stderr, "usage: %s -a [ -d ] [ -3 | -4 ]\n",Program);
-	(void) fprintf(stderr, "       %s [ -d ] [ -3 | -4 ] interface\n",
+	(void) fprintf(stderr, "usage: %s -a [ -d -m ] [ -3 | -4 ]\n",Program);
+	(void) fprintf(stderr, "       %s [ -d -m ] [ -3 | -4 ] interface\n",
 		       Program);
 	exit(1);
 }
