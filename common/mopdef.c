@@ -39,6 +39,9 @@ char rc_mcst[6] = MOP_RC_MULTICAST;	/* Remote Console Multicast    */
 char dl_802_proto[5] = MOP_K_PROTO_802_DL; /* MOP Dump/Load 802.2      */
 char rc_802_proto[5] = MOP_K_PROTO_802_RC; /* MOP Remote Console 802.2 */
 char lp_802_proto[5] = MOP_K_PROTO_802_LP; /* Loopback 802.2           */
+char dl_8021h_proto[5] = MOP_K_PROTO_8021H_DL; /* MOP Dump/Load 802.1H */
+char rc_8021h_proto[5] = MOP_K_PROTO_8021H_RC; /* MOP Remote Console 802.1H */
+char lp_8021h_proto[5] = MOP_K_PROTO_8021H_LP; /* Loopback 802.1H      */
 
 int
 mopdef_dummy()

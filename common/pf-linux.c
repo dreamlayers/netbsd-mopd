@@ -41,7 +41,8 @@
 #include <sys/socket.h>
 #include <net/if.h>
 #include <sys/errno.h>
-#include <linux/if_ether.h>
+#include <netinet/if_ether.h>
+#include <netinet/if_fddi.h>
 #include <netdb.h>
 #include <ctype.h>
 #include <netinet/in.h>
@@ -530,15 +531,37 @@ reg_cleanup()
 
 /*
  * Return information to device.c how to open device.
- * In this case the driver can handle both Ethernet type II and
- * IEEE 802.3 frames (SNAP) in a single pfOpen.
+ * The driver requires a separate pfOpen for Ethernet type II
+ * and IEEE 802.3 frames (SNAP).
+ * The driver can handle FDDI IEEE 802.1H (SNAP, RFC1042) and
+ * IEEE 802.2 (SNAP) frames in a single pfOpen.
  */
 
 int
 pfTrans(interface)
 	char *interface;
 {
-	return TRANS_ETHER+TRANS_8023;
+  int s, err;
+
+  strncpy(ifr.ifr_name, interface, sizeof (ifr.ifr_name) - 1);
+  ifr.ifr_name[sizeof(ifr.ifr_name)] = 0;
+  ifr.ifr_addr.sa_family = AF_INET;
+  s = socket(AF_INET,SOCK_DGRAM,0);
+  err = ioctl(s, SIOCGIFHWADDR, &ifr);
+  (void) close(s);
+  if (err < 0) {
+    syslog(LOG_ERR, "pfTrans: %s: SIOCGIFHWADDR: %m", interface);
+    exit(-1);
+  }
+
+  switch (ifr.ifr_hwaddr.sa_family) {
+  case ARPHRD_ETHER:
+    return TRANS_ETHER + TRANS_8023;
+  case ARPHRD_FDDI:
+    return TRANS_FDDI_8021H + TRANS_FDDI_8022 + TRANS_AND;
+  default:
+    return(0);
+  }
 }
 
 #endif /* __linux__ */

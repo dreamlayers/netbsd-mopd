@@ -215,12 +215,14 @@ mopProcess(ii, pkt)
 
 	/* We don't known with transport, Guess! */
 
-	trans = mopGetTrans(pkt, 0);
+	trans = mopGetTrans(pkt, ii->trans);
 
 	/* Ok, return if we don't wan't this message */
 
-	if ((trans == TRANS_ETHER) && Not3Flag) return;
-	if ((trans == TRANS_8023) && Not4Flag)	return;
+	if ((trans == TRANS_ETHER || trans == TRANS_FDDI_8021H) && Not3Flag)
+		return;
+	if ((trans == TRANS_8023 || trans == TRANS_FDDI_8022) && Not4Flag)
+		return;
 
 	index = 0;
 	mopGetHeader(pkt, &index, &dst, &src, &ptype, &len, trans);

@@ -126,13 +126,23 @@ mopPutHeader(pkt, index, dst, src, proto, trans)
 	int	 trans;
 {
 	
+	if (trans == TRANS_FDDI_8021H || trans == TRANS_FDDI_8022)
+		mopPutChar (pkt, index, MOP_K_FDDI_FC_DEF);
 	mopPutMulti(pkt, index, dst, 6);
 	mopPutMulti(pkt, index, src, 6);
-	if (trans == TRANS_8023) {
+	if (trans == TRANS_8023)
 		mopPutShort(pkt, index, 0);
+	if (trans != TRANS_ETHER) {
 		mopPutChar (pkt, index, MOP_K_PROTO_802_DSAP);
 		mopPutChar (pkt, index, MOP_K_PROTO_802_SSAP);
 		mopPutChar (pkt, index, MOP_K_PROTO_802_CNTL);
+	}
+	if (trans == TRANS_FDDI_8021H) {
+		mopPutChar (pkt, index, 0x00);
+		mopPutChar (pkt, index, 0x00);
+		mopPutChar (pkt, index, 0x00);
+	}
+	if (trans == TRANS_8023 || trans == TRANS_FDDI_8022) {
 		mopPutChar (pkt, index, 0x08);
 		mopPutChar (pkt, index, 0x00);
 		mopPutChar (pkt, index, 0x2b);
@@ -141,15 +151,15 @@ mopPutHeader(pkt, index, dst, src, proto, trans)
 	mopPutChar(pkt, index, (proto / 256));
 	mopPutChar(pkt, index, (proto % 256));
 #else
-	if (trans == TRANS_8023) {
-		mopPutChar(pkt, index, (proto / 256));
+	if (trans == TRANS_ETHER) {
 		mopPutChar(pkt, index, (proto % 256));
+		mopPutChar(pkt, index, (proto / 256));
 	} else {
-		mopPutChar(pkt, index, (proto % 256));
 		mopPutChar(pkt, index, (proto / 256));
+		mopPutChar(pkt, index, (proto % 256));
 	}
 #endif
-	if (trans == TRANS_ETHER)
+	if (trans != TRANS_8023)
 		mopPutShort(pkt, index, 0);
 
 }
@@ -177,6 +187,12 @@ mopPutLength(pkt, trans, len)
 		mopPutChar(pkt, &index, ((len - 14) % 256));
 		mopPutChar(pkt, &index, ((len - 14) / 256));
 #endif
+		break;
+	case TRANS_FDDI_8021H:
+	case TRANS_FDDI_8022:
+		index = 21;
+		mopPutChar(pkt, &index, ((len - 23) % 256));
+		mopPutChar(pkt, &index, ((len - 23) / 256));
 		break;
 	}
 

@@ -41,13 +41,24 @@
 #define MOP_K_PROTO_802_RC	{ 0x08, 0x00, 0x2b, 0x60, 0x02 }
 #define MOP_K_PROTO_802_LP	{ 0x08, 0x00, 0x2b, 0x90, 0x00 }
 
+#define MOP_K_PROTO_8021H_DL	{ 0x00, 0x00, 0x00, 0x60, 0x01 }
+#define MOP_K_PROTO_8021H_RC	{ 0x00, 0x00, 0x00, 0x60, 0x02 }
+#define MOP_K_PROTO_8021H_LP	{ 0x00, 0x00, 0x00, 0x90, 0x00 }
+
 #define MOP_K_PROTO_802_DSAP	0xaa
 #define MOP_K_PROTO_802_SSAP	0xaa
 #define MOP_K_PROTO_802_CNTL	0x03
 
+#define MOP_K_FDDI_FC_MIN	0x50	/* Accepted frame types: async LLC */
+#define MOP_K_FDDI_FC_MAX	0x57
+
+#define MOP_K_FDDI_FC_DEF	0x54	/* Sent frame type: async4 LLC */
+
 #define TRANS_ETHER		1	/* Packet in Ethernet format */
 #define TRANS_8023		2	/* Packet in 802.3 format */
-#define TRANS_AND		0x1000	/* Both Ethernet and 802.3 */
+#define TRANS_FDDI_8021H	4	/* Packet in FDDI 802.1H format */
+#define TRANS_FDDI_8022		8	/* Packet in FDDI 802.2 format */
+#define TRANS_AND		0x1000	/* All formats specified */
 
 /* The following constants are defined in module MOPDEF.SDL in MOM */
 
@@ -191,6 +202,9 @@ extern char rc_mcst[];
 extern char dl_802_proto[];
 extern char rc_802_proto[];
 extern char lp_802_proto[];
+extern char dl_8021h_proto[];
+extern char rc_8021h_proto[];
+extern char lp_8021h_proto[];
 #endif	MOPDEF_SUPRESS_EXTERN
 
 #endif _MOPDEF_H_

@@ -148,6 +148,7 @@ deviceOpen(ifname, proto, trans)
 		p->read    = tmp.read;
 		bzero((char *)p->eaddr,sizeof(p->eaddr));
 		p->fd      = tmp.fd;
+		p->trans   = trans;
 
 #ifdef	DEV_NEW_CONF
 		deviceEthAddr(p->if_name,&p->eaddr[0]);
@@ -229,17 +230,26 @@ deviceInitOne(ifname)
 
 	switch (trans) {
 	case TRANS_ETHER:
-		deviceOpen(interface,MOP_K_PROTO_RC,TRANS_ETHER);
-		break;
 	case TRANS_8023:
-		deviceOpen(interface,MOP_K_PROTO_RC,TRANS_8023);
+	case TRANS_FDDI_8021H:
+	case TRANS_FDDI_8022:
+		deviceOpen(interface, MOP_K_PROTO_RC, trans);
 		break;
-	case TRANS_ETHER+TRANS_8023:
-		deviceOpen(interface,MOP_K_PROTO_RC,TRANS_ETHER);
-		deviceOpen(interface,MOP_K_PROTO_RC,TRANS_8023);
+	case TRANS_ETHER + TRANS_8023:
+		deviceOpen(interface, MOP_K_PROTO_RC, TRANS_ETHER);
+		deviceOpen(interface, MOP_K_PROTO_RC, TRANS_8023);
 		break;
-	case TRANS_ETHER+TRANS_8023+TRANS_AND:
-		deviceOpen(interface,MOP_K_PROTO_RC,TRANS_ETHER+TRANS_8023);
+	case TRANS_FDDI_8021H + TRANS_FDDI_8022:
+		deviceOpen(interface, MOP_K_PROTO_RC, TRANS_FDDI_8021H);
+		deviceOpen(interface, MOP_K_PROTO_RC, TRANS_FDDI_8022);
+		break;
+	case TRANS_ETHER + TRANS_8023 + TRANS_AND:
+		deviceOpen(interface, MOP_K_PROTO_RC,
+			   TRANS_ETHER + TRANS_8023);
+		break;
+	case TRANS_FDDI_8021H + TRANS_FDDI_8022 + TRANS_AND:
+		deviceOpen(interface, MOP_K_PROTO_RC,
+			   TRANS_FDDI_8021H + TRANS_FDDI_8022);
 		break;
 	}
 #endif
@@ -249,17 +259,26 @@ deviceInitOne(ifname)
 
 	switch (trans) {
 	case TRANS_ETHER:
-		deviceOpen(interface,MOP_K_PROTO_DL,TRANS_ETHER);
-		break;
 	case TRANS_8023:
-		deviceOpen(interface,MOP_K_PROTO_DL,TRANS_8023);
+	case TRANS_FDDI_8021H:
+	case TRANS_FDDI_8022:
+		deviceOpen(interface, MOP_K_PROTO_DL, trans);
 		break;
-	case TRANS_ETHER+TRANS_8023:
-		deviceOpen(interface,MOP_K_PROTO_DL,TRANS_ETHER);
-		deviceOpen(interface,MOP_K_PROTO_DL,TRANS_8023);
+	case TRANS_ETHER + TRANS_8023:
+		deviceOpen(interface, MOP_K_PROTO_DL, TRANS_ETHER);
+		deviceOpen(interface, MOP_K_PROTO_DL, TRANS_8023);
 		break;
-	case TRANS_ETHER+TRANS_8023+TRANS_AND:
-		deviceOpen(interface,MOP_K_PROTO_DL,TRANS_ETHER+TRANS_8023);
+	case TRANS_FDDI_8021H + TRANS_FDDI_8022:
+		deviceOpen(interface, MOP_K_PROTO_DL, TRANS_FDDI_8021H);
+		deviceOpen(interface, MOP_K_PROTO_DL, TRANS_FDDI_8022);
+		break;
+	case TRANS_ETHER + TRANS_8023 + TRANS_AND:
+		deviceOpen(interface, MOP_K_PROTO_DL,
+			   TRANS_ETHER + TRANS_8023);
+		break;
+	case TRANS_FDDI_8021H + TRANS_FDDI_8022 + TRANS_AND:
+		deviceOpen(interface, MOP_K_PROTO_DL,
+			   TRANS_FDDI_8021H + TRANS_FDDI_8022);
 		break;
 	}
 #endif

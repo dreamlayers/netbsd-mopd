@@ -82,6 +82,10 @@ mopProcessInfo(pkt,index,moplen,dl_rpr,trans)
 	case TRANS_8023:
 		moplen = moplen + 14;
 		break;
+	case TRANS_FDDI_8021H:
+	case TRANS_FDDI_8022:
+		moplen = moplen + 23;
+		break;
 	}
 
 	itype = mopGetShort(pkt,index); 
@@ -279,10 +283,10 @@ mopStartLoad(dst, src, dl_rpr, trans)
 		dllist[slot].dl_bsz = 1010;
 	if (dllist[slot].dl_bsz == 0)           /* Needed by "big" VAXen */
 		dllist[slot].dl_bsz = MOP_K_DLBSZ_DEFAULT;
-	if (trans == TRANS_8023)
+	if (trans == TRANS_8023 || trans == TRANS_FDDI_8022)
 		if (dllist[slot].dl_bsz > MAX_ETH_PAYLOAD - 8)
 			dllist[slot].dl_bsz = MAX_ETH_PAYLOAD - 8;
-	if (trans == TRANS_ETHER)
+	if (trans != TRANS_8023)
 		dllist[slot].dl_bsz -= 2;	/* For packet length */
 	dllist[slot].dl_bsz -= 6;		/* For Memory Load header */
 

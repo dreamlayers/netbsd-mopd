@@ -95,15 +95,30 @@ mopGetTrans(pkt, trans)
 {
 	u_short	*ptype;
 	
-	if (trans == 0) {
+	if ((trans & (TRANS_ETHER + TRANS_8023))) {
 		ptype = (u_short *)(pkt+12);
 		if (ntohs(*ptype) < 1600) {
-			trans = TRANS_8023;
+			trans &= TRANS_8023;
 		} else {
-			trans = TRANS_ETHER;
+			trans &= TRANS_ETHER;
 		}
+		return(trans);
 	}
-	return(trans);
+	if ((trans & (TRANS_FDDI_8021H + TRANS_FDDI_8022))) {
+		if (*pkt >= MOP_K_FDDI_FC_MIN && *pkt <= MOP_K_FDDI_FC_MAX) {
+			if (!bcmp((char *)(pkt+16), (char *)dl_802_proto, 3)) {
+				trans &= TRANS_FDDI_8022;
+				return(trans);
+			}
+			if (!bcmp((char *)(pkt+16),
+				  (char *)dl_8021h_proto, 3)) {
+				trans &= TRANS_FDDI_8021H;
+				return(trans);
+			}
+		}
+		return(0);
+	}
+	return(0);
 }
 
 void
@@ -112,21 +127,33 @@ mopGetHeader(pkt, index, dst, src, proto, len, trans)
 	int	*index, *len, trans;
 	u_short	*proto;
 {
-	*dst = pkt;
-	*src = pkt + 6;
-	*index = *index + 12;
-
 	switch(trans) {
 	case TRANS_ETHER:
+		*dst = pkt;
+		*src = pkt + 6;
+		*index = *index + 12;
 		*proto = (u_short)(pkt[*index]*256 + pkt[*index+1]);
 		*index = *index + 2;
 		*len   = (int)(pkt[*index+1]*256 + pkt[*index]);
 		*index = *index + 2;
 		break;
 	case TRANS_8023:
+		*dst = pkt;
+		*src = pkt + 6;
+		*index = *index + 12;
 		*len   = (int)(pkt[*index]*256 + pkt[*index+1]);
 		*index = *index + 8;
 		*proto = (u_short)(pkt[*index]*256 + pkt[*index+1]);
+		*index = *index + 2;
+		break;
+	case TRANS_FDDI_8021H:
+	case TRANS_FDDI_8022:
+		*dst = pkt + 1;
+		*src = pkt + 7;
+		*index = *index + 19;
+		*proto = (u_short)(pkt[*index]*256 + pkt[*index+1]);
+		*index = *index + 2;
+		*len   = (int)(pkt[*index+1]*256 + pkt[*index]);
 		*index = *index + 2;
 		break;
 	}
@@ -143,6 +170,10 @@ mopGetLength(pkt, trans)
 		break;
 	case TRANS_8023:
 		return(pkt[12]*256 + pkt[13]);
+		break;
+	case TRANS_FDDI_8021H:
+	case TRANS_FDDI_8022:
+		return(pkt[22]*256 + pkt[21]);
 		break;
 	}
 	return(0);

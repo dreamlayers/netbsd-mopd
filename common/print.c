@@ -145,18 +145,24 @@ mopPrintOneline(fd, pkt, trans)
 		}
 	}
 
-	if (trans == TRANS_8023) {
+	switch (trans) {
+	case TRANS_ETHER:
+		(void)fprintf(fd, "EthII ");
+		break;
+	case TRANS_8023:
 		(void)fprintf(fd, "802.3 ");
+		break;
+	case TRANS_FDDI_8021H:
+		(void)fprintf(fd, "FDDI 802.1H ");
+		break;
+	case TRANS_FDDI_8022:
+		(void)fprintf(fd, "FDDI 802.2 ");
+		break;
 	}
 
 	mopPrintHWA(fd, src); (void)fprintf(fd," > ");
 	mopPrintHWA(fd, dst);
-	if (len < 1600) {
-        	(void)fprintf(fd, " len %4d code %02x ",len,code);
-	} else {
-		(void)fprintf(fd, " len %4d code %02x ",
-			      (len % 256)*256 + (len /256), code);
-	}
+       	(void)fprintf(fd, " len %4d code %02x ", len, code);
 
 	switch (proto) {
 	case MOP_K_PROTO_DL:
@@ -279,37 +285,30 @@ mopPrintHeader(fd, pkt, trans)
 	(void)fprintf(fd,"Proto        : %04x ",proto);
 	switch (proto) {
 	case MOP_K_PROTO_DL:
-		switch (trans) {
-		case TRANS_8023:
-			(void)fprintf(fd, "MOP Dump/Load (802.3)\n");
-			break;
-		default:
-			(void)fprintf(fd, "MOP Dump/Load\n");
-		}
+		(void)fprintf(fd, "MOP Dump/Load ");
 		break;
 	case MOP_K_PROTO_RC:
-		switch (trans) {
-		case TRANS_8023:
-			(void)fprintf(fd, "MOP Remote Console (802.3)\n");
-			break;
-		default:
-			(void)fprintf(fd, "MOP Remote Console\n");
-		}
+		(void)fprintf(fd, "MOP Remote Console ");
 		break;
 	case MOP_K_PROTO_LP:
-		switch (trans) {
-		case TRANS_8023:
-			(void)fprintf(fd, "MOP Loopback (802.3)\n");
-			break;
-		default:
-			(void)fprintf(fd, "MOP Loopback\n");
-		}
-		break;
-	default:
-		(void)fprintf(fd, "\n");
+		(void)fprintf(fd, "MOP Loopback ");
 		break;
 	}
-
+	switch (trans) {
+	case TRANS_ETHER:
+		(void)fprintf(fd, "(EthII)");
+		break;
+	case TRANS_8023:
+		(void)fprintf(fd, "(802.3)");
+		break;
+	case TRANS_FDDI_8021H:
+		(void)fprintf(fd, "(FDDI 802.1H)");
+		break;
+	case TRANS_FDDI_8022:
+		(void)fprintf(fd, "(FDDI 802.2)");
+		break;
+	}
+	(void)fprintf(fd, "\n");
 	
         (void)fprintf(fd,"Length       : %04x (%d)\n",len,len);
 }
@@ -470,6 +469,10 @@ mopPrintInfo(fd, pkt, index, moplen, mopcode, trans)
 		break;
 	case TRANS_8023:
 		moplen = moplen + 14;
+		break;
+	case TRANS_FDDI_8021H:
+	case TRANS_FDDI_8022:
+		moplen = moplen + 23;
 		break;
 	}
 

@@ -50,13 +50,21 @@ mopDumpDL(fd, pkt, trans)
 	len = mopGetLength(pkt, trans);
 
 	switch (trans) {
+	case TRANS_ETHER:
+		index = 16;
+		moplen = len;
+		break;
 	case TRANS_8023:
 		index = 22;
 		moplen = len - 8;
 		break;
-	default:
-		index = 16;
+	case TRANS_FDDI_8021H:
+	case TRANS_FDDI_8022:
+		index = 23;
 		moplen = len;
+		break;
+	default:
+		moplen = 0;
 	}
 	if (moplen < 1)				/* broken packet */
 		return;

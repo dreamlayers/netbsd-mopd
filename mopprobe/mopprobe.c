@@ -152,27 +152,55 @@ mopProcess(ii, pkt)
 	u_char *pkt;
 {
 	u_char  *dst, *src, *p, mopcode, tmpc, ilen;
-	u_short *ptype, moplen, tmps, itype, len;
+	u_short *ptype, moplen, tmps, itype;
 	int	index, i, device, trans;
 
-	dst	= pkt;
-	src	= pkt+6;
-	ptype   = (u_short *)(pkt+12);
-	index   = 0;
-	
-	if (*ptype < 1600) {
-		len = *ptype;
-		trans = TRANS_8023;
-		ptype = (u_short *)(pkt+20);
-		p = pkt+22;
-		if (Not4Flag) return;
-	} else {
-		len = 0;
-		trans = TRANS_ETHER;
-		p = pkt+14;
-		if (Not3Flag) return;
+	trans = ii->trans;
+	if ((trans & (TRANS_ETHER + TRANS_8023))) {
+		ptype = (u_short *)(pkt+12);
+		if (ntohs(*ptype) < 1600) {
+			trans &= TRANS_8023;
+			if (Not4Flag)
+				return;
+		} else {
+			trans &= TRANS_ETHER;
+			if (Not3Flag)
+				return;
+		}
+	} else if ((trans & (TRANS_FDDI_8021H + TRANS_FDDI_8022))) {
+		if (*pkt >= MOP_K_FDDI_FC_MIN && *pkt <= MOP_K_FDDI_FC_MAX) {
+			if (!bcmp((char *)(pkt+16),
+					 (char *)dl_802_proto, 3)) {
+				trans &= TRANS_FDDI_8022;
+				if (Not4Flag)
+					return;
+			} else if (!bcmp((char *)(pkt+16),
+				  (char *)dl_8021h_proto, 3)) {
+				trans &= TRANS_FDDI_8021H;
+				if (Not3Flag)
+					return;
+			} else
+				return;
+		} else
+			return;
+	} else
+		return;
+
+	switch (trans) {
+	case TRANS_8023:
+	case TRANS_ETHER:
+		dst = pkt;
+		src = pkt + 6;
+		break;
+	case TRANS_FDDI_8022:
+	case TRANS_FDDI_8021H:
+		dst = pkt + 1;
+		src = pkt + 7;
+		break;
+	default:
+		return;
 	}
-	
+
 	/* Ignore our own messages */
 
 	if (mopCmpEAddr(ii->eaddr,src) == 0) {
@@ -187,11 +215,21 @@ mopProcess(ii, pkt)
 	
 	switch (trans) {
 	case TRANS_8023:
-		moplen = len;
+		index = 22;
+		moplen = ntohs(*ptype);
 		break;
-	default:
+	case TRANS_ETHER:
+		index = 14;
 		moplen = mopGetShort(pkt,&index);
+		break;
+	case TRANS_FDDI_8022:
+	case TRANS_FDDI_8021H:
+		index = 21;
+		moplen = mopGetShort(pkt,&index);
+		break;
 	}
+	p = pkt + index;
+	index = 0;
 	mopcode	= mopGetChar(p,&index);
 
 	/* Just process System Information */
@@ -207,7 +245,7 @@ mopProcess(ii, pkt)
 	
 	itype	= mopGetShort(pkt,&index);
 
-	while (index < (int)(moplen + 2)) {
+	while (index < (int)(moplen)) {
 		ilen	= mopGetChar(pkt,&index);
 		switch (itype) {
 		case 0:
