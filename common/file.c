@@ -45,6 +45,28 @@ static char rcsid[] = "$Id: file.c,v 1.4 1996/08/16 22:39:22 moj Exp $";
 #if defined(__FreeBSD__)
 #include <sys/imgact_aout.h>
 #endif
+#if defined(__linux__)
+#include <a.out.h>
+/*
+ * Linux provides appropriate structures but access macros
+ * have different names and BSD machine ids are missing.
+ */
+#define N_GETMID	N_MACHTYPE
+#define N_GETMAGIC	N_MAGIC
+#define MID_SUN010	M_68010	/* sun 68010/68020 binary */
+#define MID_SUN020	M_68020	/* sun 68020-only binary */
+#define MID_PC386	M_386	/* 386 PC binary */
+#define MID_I386	134	/* i386 binary */
+#define MID_M68K	135	/* m68k binary with 8K page sizes */
+#define MID_M68K4K	136	/* m68k binary with 4K page sizes */
+#define MID_NS32532	137	/* ns32532 binary */
+#define MID_SPARC	138	/* sparc binary */
+#define MID_PMAX	139	/* pmax (little-endian MIPS) binary */
+#define MID_VAX		140	/* vax binary */
+#define MID_ALPHA	141	/* Alpha binary */
+#define MID_MIPS	142	/* big-endian MIPS binary */
+#define MID_ARM6	143	/* ARM6 binary */
+#endif
 #if !defined(MID_VAX)
 #define MID_VAX 140
 #endif
@@ -301,56 +323,56 @@ getMID(old_mid,new_mid)
 
 	switch (new_mid) {
 	case MID_I386:
-		mid = MID_I386;
-		break;
+	case MID_SPARC:
+#ifdef MID_SUN010
+	case MID_SUN010:
+#endif
+#ifdef MID_SUN020
+	case MID_SUN020:
+#endif
+#ifdef MID_PC386
+	case MID_PC386:
+#endif
 #ifdef MID_M68K
 	case MID_M68K:
-		mid = MID_M68K;
-		break;
 #endif
 #ifdef MID_M68K4K
 	case MID_M68K4K:
-		mid = MID_M68K4K;
-		break;
 #endif
 #ifdef MID_NS32532
 	case MID_NS32532:
-		mid = MID_NS32532;
-		break;
 #endif
-/*###323 [cc] for each function it appears in.)%%%*/
-/*###323 [cc] (Each undeclared identifier is reported only once%%%*/
-/*###323 [cc] `MID_SPARC' undeclared (first use this function)%%%*/
-	case MID_SPARC:
-		mid = MID_SPARC;
-		break;
 #ifdef MID_PMAX
 	case MID_PMAX:
-		mid = MID_PMAX;
-		break;
 #endif
 #ifdef MID_VAX
 	case MID_VAX:
-		mid = MID_VAX;
-		break;
 #endif
 #ifdef MID_ALPHA
 	case MID_ALPHA:
-		mid = MID_ALPHA;
-		break;
 #endif
 #ifdef MID_MIPS
 	case MID_MIPS:
-		mid = MID_MIPS;
-		break;
 #endif
 #ifdef MID_ARM6
 	case MID_ARM6:
-		mid = MID_ARM6;
-		break;
 #endif
+#ifdef M_SPARC
+	case M_SPARC:
+#endif
+#ifdef M_ARM
+	case M_ARM:
+#endif
+#ifdef M_MIPS1
+	case M_MIPS1:
+#endif
+#ifdef M_MIPS2
+	case M_MIPS2:
+#endif
+		mid = new_mid;
+		break;
 	default:
-/*###352 [cc] syntax error before `}'%%%*/
+		;
 	}
 
 	return(mid);
