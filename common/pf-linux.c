@@ -204,12 +204,17 @@ int s;
 char *interface;
 u_char *addr;
 {
+  int err;
+
   strncpy(ifr.ifr_name, interface, sizeof (ifr.ifr_name) - 1);
   ifr.ifr_name[sizeof(ifr.ifr_name)] = 0;
   ifr.ifr_addr.sa_family = AF_INET;
-  if (ioctl(s, SIOCGIFHWADDR, &ifr) < 0) {
+  s = socket(AF_INET,SOCK_DGRAM,0);
+  err = ioctl(s, SIOCGIFHWADDR, &ifr);
+  (void) close(s);
+  if (err < 0) {
     syslog(LOG_ERR, "pfEthAddr: %s: SIOCGIFHWADDR: %m", interface);
-    return(-1);
+    exit(-1);
   }
   memcpy((char *)addr, ifr.ifr_hwaddr.sa_data, 6);
   return(0);

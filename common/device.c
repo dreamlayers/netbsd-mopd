@@ -152,12 +152,7 @@ deviceOpen(ifname, proto, trans)
 #ifdef	DEV_NEW_CONF
 		deviceEthAddr(p->if_name,&p->eaddr[0]);
 #elif	defined(__linux__)
-		{
-			int s;
-			s = socket(AF_INET,SOCK_DGRAM,0);
-			pfEthAddr(s,p->if_name,&p->eaddr[0]);
-			(void) close(s);
-		}
+		pfEthAddr(0, p->if_name,&p->eaddr[0]);
 #else
 		p->eaddr[0]= tmp.eaddr[0];
 		p->eaddr[1]= tmp.eaddr[1];
