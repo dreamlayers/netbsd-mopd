@@ -44,8 +44,8 @@ mopDumpDL(fd, pkt, trans)
 {
 	int	i,index = 0;
 	long	tmpl;
-	u_char	tmpc,c,program[17],code,*ucp;
-	u_short	len,tmps,moplen;
+	u_char	tmpc,c,program[257],code,*ucp;
+	int	len,tmps,moplen;
 
 	len = mopGetLength(pkt, trans);
 
@@ -58,6 +58,8 @@ mopDumpDL(fd, pkt, trans)
 		index = 16;
 		moplen = len;
 	}
+	if (moplen < 1)				/* broken packet */
+		return;
 	code = mopGetChar(pkt,&index);
 	
 	switch (code) {

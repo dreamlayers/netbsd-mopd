@@ -34,7 +34,7 @@ static char rcsid[] = "$Id: loop-bsd.c,v 1.11 1996/08/16 22:41:28 moj Exp $";
 #include <stdlib.h>
 #include <strings.h>
 #include <unistd.h>
-#if defined(__bsdi__) || defined(__FreeBSD__)
+#if defined(__bsdi__) || defined(__FreeBSD__) || defined(__NetBSD__)
 #include <sys/time.h>
 #endif
 #if !defined(__linux__)

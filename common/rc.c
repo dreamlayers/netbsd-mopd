@@ -45,7 +45,7 @@ mopDumpRC(fd, pkt, trans)
 	int	i,index = 0;
 	long	tmpl;
 	u_char	tmpc,code,control;
-	u_short	len,tmps,moplen;
+	int	len,tmps,moplen;
 
 	len = mopGetLength(pkt, trans);
 
@@ -58,6 +58,8 @@ mopDumpRC(fd, pkt, trans)
 		index = 16;
 		moplen = len;
 	}
+	if (moplen < 1)				/* broken packet */
+		return;
 	code = mopGetChar(pkt,&index);
 	
 	switch (code) {

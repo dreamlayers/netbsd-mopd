@@ -82,6 +82,7 @@ deviceEthAddr(ifname, eaddr)
 	if (ioctl(fd, SIOCGIFCONF, (caddr_t)&ifc) < 0 ||
 	    ifc.ifc_len < sizeof(struct ifreq)) {
 		syslog(LOG_ERR, "deviceEthAddr: SIOGIFCONF: %m");
+		(void) close(fd);
 		exit(1);
 	}
 	ifr = ifc.ifc_req;
@@ -94,11 +95,13 @@ deviceEthAddr(ifname, eaddr)
 			continue;
 		if (!strncmp(ifr->ifr_name, ifname, sizeof(ifr->ifr_name))) {
 			bcopy((caddr_t)LLADDR(sdl), (caddr_t)eaddr, 6);
+			(void) close(fd);
 			return;
 		}
 	}
 
 	syslog(LOG_ERR, "deviceEthAddr: Never saw interface `%s'!", ifname);
+	(void) close(fd);
 	exit(1);
 }
 #endif	/* DEV_NEW_CONF */
@@ -213,11 +216,7 @@ deviceInitOne(ifname)
 
 	/* Ok, get transport information */
 	
-#ifdef __linux__
-	trans = TRANS_ETHER+TRANS_8023+TRANS_AND; 
-#else
 	trans = pfTrans(interface);
-#endif
 
 #ifndef NORC
 	/* Start with MOP Remote Console */

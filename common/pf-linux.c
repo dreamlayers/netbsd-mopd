@@ -45,6 +45,8 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "mopdef.h"
+
 /*
  * map compatible functions
  *
@@ -131,7 +133,7 @@ int typ, mode;
 
   { u_short prot;
 
-    prot = ((typ == 2) ? htons(ETH_P_802_2) : htons(protocol));
+    prot = ((typ == TRANS_8023) ? htons(ETH_P_802_2) : htons(protocol));
     if ((s = socket(AF_INET, SOCK_PACKET, prot)) < 0) {
       perror(interface);
       return(-1);
@@ -175,7 +177,8 @@ int s;
 char *interface;
 u_char *addr;
 {
-  strcpy(ifr.ifr_name, interface);
+  strncpy(ifr.ifr_name, interface, sizeof (ifr.ifr_name) - 1);
+  ifr.ifr_name[sizeof(ifr.ifr_name)] = 0;
   ifr.ifr_addr.sa_family = AF_INET;
   if (ioctl(s, SIOCGIFHWADDR, &ifr) < 0) {
     perror("SIOCGIFHWADDR");
@@ -200,7 +203,8 @@ u_char *addr;
 
 #ifdef	USE_SADDMULTI
 
-  strcpy(ifr.ifr_name, interface);
+  strncpy(ifr.ifr_name, interface, sizeof (ifr.ifr_name) - 1);
+  ifr.ifr_name[sizeof(ifr.ifr_name)] = 0;
 
 #ifdef	UPFILT
   /* get the real interface name */
@@ -248,7 +252,8 @@ u_char *addr;
 
 #ifdef	USE_SADDMULTI
 
-  strcpy(ifr.ifr_name, interface);
+  strncpy(ifr.ifr_name, interface, sizeof (ifr.ifr_name) - 1);
+  ifr.ifr_name[sizeof(ifr.ifr_name)] = 0;
 
   ifr.ifr_addr.sa_family = AF_UNSPEC;
   bcopy((char *)addr, ifr.ifr_addr.sa_data, 6);
@@ -352,6 +357,19 @@ u_char *buf;
     return(len);
 
   return(-1);
+}
+
+/*
+ * Return information to device.c how to open device.
+ * In this case the driver can handle both Ethernet type II and
+ * IEEE 802.3 frames (SNAP) in a single pfOpen.
+ */
+
+int
+pfTrans(interface)
+	char *interface;
+{
+	return TRANS_ETHER+TRANS_8023;
 }
 
 #endif /* __linux__ */

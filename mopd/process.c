@@ -45,6 +45,10 @@ static char rcsid[] = "$Id: process.c,v 1.21 1996/08/22 17:04:07 moj Exp $";
 #include <common/file.h>
 #include "process.h"
 
+#define SEND_REAL_HOSTNAME
+
+#define MAX_ETH_PAYLOAD 1492
+
 extern u_char	buf[];
 extern int	DebugFlag;
 
@@ -266,10 +270,12 @@ mopStartLoad(dst, src, dl_rpr, trans)
 	dllist[slot].a_lseek   = 0;
 
 	dllist[slot].count     = 0;
-	if (dllist[slot].dl_bsz >= 1492)
-		dllist[slot].dl_bsz = 1492;
+	if (dllist[slot].dl_bsz >= MAX_ETH_PAYLOAD)
+		dllist[slot].dl_bsz = MAX_ETH_PAYLOAD;
 	if (dllist[slot].dl_bsz == 1030)	/* VS/uVAX 2000 needs this */
 		dllist[slot].dl_bsz = 1000;
+	if (dllist[slot].dl_bsz == 0)           /* Needed by "big" VAXen */
+		dllist[slot].dl_bsz = MAX_ETH_PAYLOAD;
 	if (trans == TRANS_8023)
 		dllist[slot].dl_bsz = dllist[slot].dl_bsz - 8;
 
@@ -324,6 +330,13 @@ mopNextLoad(dst, src, new_count, trans)
 	u_short  newlen = 0,ptype = MOP_K_PROTO_DL;
 	u_char	 mopcode;
 
+#ifdef SEND_REAL_HOSTNAME
+	struct utsname uts_name;
+	char hostname[MAXHOSTNAMELEN];
+#else
+	char hostname[MAXHOSTNAMELEN] = DEFAULT_HOSTNAME;
+#endif
+
 	slot = -1;
 	
 	for (i = 0; i < MAXDL; i++) {
@@ -352,14 +365,14 @@ mopNextLoad(dst, src, new_count, trans)
 		sprintf(line,
 			"%x:%x:%x:%x:%x:%x Load completed",
 			dst[0],dst[1],dst[2],dst[3],dst[4],dst[5]);
-		syslog(LOG_INFO, line);
+		syslog(LOG_INFO, "%s", line);
 		return;
 	}
 
 	dllist[slot].lseek     = lseek(dllist[slot].ldfd,0L,SEEK_CUR);
 	
-	if (dllist[slot].dl_bsz >= 1492)
-		dllist[slot].dl_bsz = 1492;
+	if (dllist[slot].dl_bsz >= MAX_ETH_PAYLOAD)
+		dllist[slot].dl_bsz = MAX_ETH_PAYLOAD;
 	
 	index = 0;
 	mopPutHeader(pkt, &index, dst, src, ptype, trans);
@@ -382,13 +395,22 @@ mopNextLoad(dst, src, new_count, trans)
 		
 	} else {
 		if (len == 0) {
+#ifdef SEND_REAL_HOSTNAME
+			if (uname(&uts_name) < 0) {
+				syslog(LOG_ERR,
+				       "uname: %m, sending `%s' as hostname",
+				       DEFAULT_HOSTNAME);
+				sprintf(hostname, "%s", DEFAULT_HOSTNAME);
+			} else
+				sprintf(hostname, "%s", uts_name.nodename);
+#endif
 			index = pindex;
 			mopcode = MOP_K_CODE_PLT;
 			mopPutChar (pkt,&index,mopcode);
 			mopPutChar (pkt,&index,dllist[slot].count);
 			mopPutChar (pkt,&index,MOP_K_PLTP_HSN);
- 			mopPutChar (pkt,&index,3);
-			mopPutMulti(pkt,&index,"ipc",3);
+ 			mopPutChar (pkt,&index,strlen(hostname));
+			mopPutMulti(pkt,&index,hostname,strlen(hostname));
 			mopPutChar (pkt,&index,MOP_K_PLTP_HSA);
 			mopPutChar (pkt,&index,6);
 			mopPutMulti(pkt,&index,src,6);
@@ -437,7 +459,7 @@ mopProcessDL(fd, ii, pkt, index, dst, src, trans, len)
 {
 	u_char  tmpc;
 	u_short moplen;
-	u_char  pfile[17], mopcode;
+	u_char  pfile[257], mopcode;
 	char    filename[FILENAME_MAX];
 	char    line[100];
 	int     i,nfd,iindex;
@@ -527,7 +549,7 @@ mopProcessDL(fd, ii, pkt, index, dst, src, trans, len)
 					src[0],src[1],src[2],
 					src[3],src[4],src[5],trans,pfile);
 			}
-			syslog(LOG_INFO, line);
+			syslog(LOG_INFO, "%s", line);
 		} else {
 			if ((mopCmpEAddr(dst,ii->eaddr) == 0)) {
 				dl_rpr->ldfd = open(filename, O_RDONLY, 0);
@@ -536,7 +558,7 @@ mopProcessDL(fd, ii, pkt, index, dst, src, trans, len)
 					"%x:%x:%x:%x:%x:%x Send me %s",
 					src[0],src[1],src[2],
 					src[3],src[4],src[5],pfile);
-				syslog(LOG_INFO, line);
+				syslog(LOG_INFO, "%s", line);
 			}
 		}
 		

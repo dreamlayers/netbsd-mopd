@@ -38,6 +38,10 @@
 #define BUFSIZE		1600		/* main receive buffer size	*/
 #define HDRSIZ		22		/* room for 803.2 header	*/
 
+#ifndef DEFAULT_HOSTNAME
+#define DEFAULT_HOSTNAME	"ipc"
+#endif
+
 #ifndef MOP_FILE_PATH
 #define MOP_FILE_PATH	"/tftpboot/mop"
 #endif

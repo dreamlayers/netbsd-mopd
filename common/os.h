@@ -70,6 +70,9 @@
 #endif
 #include <unistd.h>
 
+#include <sys/utsname.h>
+#include <sys/param.h>
+
 #if defined(sun)
 typedef int ssize_t;
 #endif
