@@ -43,7 +43,7 @@ mopDumpDL(fd, pkt, trans)
 	int	 trans;
 {
 	int	i,index = 0;
-	long	tmpl;
+	u_int	tmpl;
 	u_char	tmpc,c,program[257],code,*ucp;
 	int	len,tmps,moplen;
 

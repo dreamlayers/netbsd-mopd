@@ -32,6 +32,7 @@ static char rcsid[] = "$Id: get.c,v 1.5 1996/03/31 18:50:14 moj Exp $";
 #endif
 
 #include <sys/types.h>
+#include <netinet/in.h>
 #include "mopdef.h"
 
 u_char
@@ -58,7 +59,7 @@ mopGetShort(pkt, index)
 	return(ret);
 }
 
-u_long
+u_int
 mopGetLong(pkt, index)
 	register u_char *pkt;
 	register int    *index;

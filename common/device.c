@@ -34,6 +34,7 @@ static char rcsid[] = "$Id: device.c,v 1.21 1996/08/08 00:00:59 moj Exp $";
 #include "os.h"
 #include "common.h"
 #include "mopdef.h"
+#include "pf.h"
 
 struct	if_info *iflist;		/* Interface List		*/
 
@@ -319,7 +320,7 @@ deviceInitAll()
 	ifc.ifc_len = sizeof ibuf;
 	ifc.ifc_buf = (caddr_t)ibuf;
 	if (ioctl(fd, SIOCGIFCONF, (char *)&ifc) < 0 ||
-	    ifc.ifc_len < sizeof(struct ifreq)) {
+	    ifc.ifc_len < (int)sizeof(struct ifreq)) {
 		syslog(LOG_ERR, "deviceInitAll: old SIOCGIFCONF: %m");
 		exit(1);
 	}

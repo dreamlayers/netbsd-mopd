@@ -43,7 +43,7 @@ mopDumpRC(fd, pkt, trans)
 	int	 trans;
 {
 	int	i,index = 0;
-	long	tmpl;
+	u_int	tmpl;
 	u_char	tmpc,code,control;
 	int	len,tmps,moplen;
 

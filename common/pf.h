@@ -36,7 +36,7 @@
 #ifdef NO__P
 int	pfTrans	   (/* char * */);
 int	pfInit     (/* char *, int, u_short, int */);
-int	pfEthAddr  (/* int, u_char * */);
+int	pfEthAddr  (/* int, char *, u_char * */);
 int	pfAddMulti (/* int, char *, char * */);
 int	pfDelMulti (/* int, char *, char * */);
 int	pfRead     (/* int, u_char *, int */);
@@ -45,7 +45,7 @@ int	pfWrite    (/* int, u_char *, int, int  */);
 __BEGIN_DECLS
 int	pfTrans	   __P((char *));
 int	pfInit     __P((char *, int, u_short, int));
-int	pfEthAddr  __P((int, u_char *));
+int	pfEthAddr  __P((int, char *, u_char *));
 int	pfAddMulti __P((int, char *, char *));
 int	pfDelMulti __P((int, char *, char *));
 int	pfRead     __P((int, u_char *, int));

@@ -56,6 +56,12 @@ struct dllist dllist[MAXDL];		/* dump/load list		*/
 extern char	dl_mcst[];		/* Dump/Load Multicast		*/
 extern char	rc_mcst[];		/* Remote Console Multicast	*/
 
+#ifdef NO__P
+ssize_t mopFileRead   (/* struct dllist *, u_char * */);
+#else
+ssize_t mopFileRead   __P((struct dllist *, u_char *));
+#endif
+
 void
 mopProcessInfo(pkt,index,moplen,dl_rpr,trans)
 	u_char  *pkt;

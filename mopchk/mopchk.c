@@ -164,7 +164,7 @@ main(argc, argv)
 void
 Usage()
 {
-	(void) fprintf(stderr, "usage: %d [-a] [-v] [filename...]\n",Program);
+	fprintf(stderr, "usage: %s [-a] [-v] [filename...]\n", Program);
 	exit(1);
 }
 

@@ -36,7 +36,7 @@
 #ifdef NO__P
 u_char	mopGetChar   (/* u_char *, int * */);
 u_short	mopGetShort  (/* u_char *, int * */);
-u_long	mopGetLong   (/* u_char *, int * */);
+u_int 	mopGetLong   (/* u_char *, int * */);
 void	mopGetMulti  (/* u_char *, int *,u_char *,int */);
 int	mopGetTrans  (/* u_char *, int */);
 void	mopGetHeader (/* u_char *, int *, u_char **, u_char **, u_short *,
@@ -46,7 +46,7 @@ u_short	mopGetLength (/* u_char *, int */);
 __BEGIN_DECLS
 u_char	mopGetChar   __P((u_char *,int *));
 u_short	mopGetShort  __P((u_char *,int *));
-u_long	mopGetLong   __P((u_char *,int *));
+u_int 	mopGetLong   __P((u_char *,int *));
 void	mopGetMulti  __P((u_char *,int *,u_char *,int));
 int	mopGetTrans  __P((u_char *, int));
 void	mopGetHeader __P((u_char *, int *, u_char **, u_char **, u_short *,
