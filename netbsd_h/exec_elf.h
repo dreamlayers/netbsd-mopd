@@ -47,10 +47,13 @@
 #include <stddef.h>
 #endif /* _KERNEL || _STANDALONE */
 
+/* Not needed for mopd */
+#if 0
 #if HAVE_NBTOOL_CONFIG_H
 #include <nbinclude/machine/elf_machdep.h>
 #else
 #include <machine/elf_machdep.h>
+#endif
 #endif
 
 typedef uint8_t		Elf_Byte;

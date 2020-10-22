@@ -54,7 +54,7 @@ __RCSID("$NetBSD: file.c,v 1.16 2016/06/08 01:11:49 christos Exp $");
 # if defined(__NetBSD__)
 #  include <sys/exec_elf.h>
 # else
-#  define NOELF
+#  include "../netbsd_h/exec_elf.h"
 # endif
 #endif /* NOELF */
 

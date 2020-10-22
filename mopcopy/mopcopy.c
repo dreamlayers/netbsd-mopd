@@ -76,7 +76,7 @@ __RCSID("$NetBSD: mopcopy.c,v 1.7 2019/12/27 09:41:52 msaitoh Exp $");
 # if defined(__NetBSD__)
 #  include <sys/exec_elf.h>
 # else
-#  define NOELF
+#  include "../netbsd_h/exec_elf.h"
 # endif
 # if !defined(EM_VAX)
 #  define EM_VAX 75
