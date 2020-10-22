@@ -86,7 +86,7 @@ static int setup_pf(int, int, u_short);
 
 
 int
-pfInit(char *interface, u_short protocol, int typ, int mode)
+pfInit(char *interface, int mode, u_short protocol, int typ)
 {
   int s;
   int ioarg;
