@@ -1,0 +1,29 @@
+SUBDIRS := common mopd mopcopy mopprobe moptrace mopchk
+
+CLEANDIRS := $(SUBDIRS:%=clean-%)
+INSTALLDIRS := $(SUBDIRS:%=install-%)
+
+.PHONY : all $(SUBDIRS) $(CLEANDIRS) $(INSTALLDIRS)
+
+all: $(SUBDIRS)
+
+# Dependencies between targets
+
+mopd: common
+mopcopy: common
+mopprobe: common
+moptrace: common
+mopchk: common
+
+# Rules
+
+$(SUBDIRS):
+	$(MAKE) -C $@ -f Makefile.linux
+
+install: $(INSTALLDIRS) all
+$(INSTALLDIRS):
+	$(MAKE) -C $(@:install-%=%) -f Makefile.linux install
+
+clean: $(CLEANDIRS)
+$(CLEANDIRS):
+	$(MAKE) -C $(@:clean-%=%) -f Makefile.linux clean
