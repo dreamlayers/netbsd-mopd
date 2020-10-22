@@ -3,7 +3,8 @@ SRCS+=cmp.c device.c dl.c file.c get.c log.c loop-linux2.c mopdef.c nma.c
 SRCS+=pf-linux2.c print.c put.c rc.c version.c
 OBJS+=${SRCS:.c=.o}
 
-CFLAGS+=-DNOAOUT
+# Not needed as long as including of files from netbsd_h works
+#CFLAGS+=-DNOAOUT
 
 libcommon.a: ${OBJS}
 	ar cr $@ ${OBJS}

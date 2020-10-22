@@ -42,15 +42,19 @@
  * only manipulate the a_midmag field via the
  * N_SETMAGIC/N_GET{MAGIC,MID,FLAG} macros below.
  */
+/* VAXen are 32 bit and this might get compiled on 64 bit machines,
+ * so unsigned long changed to uint32_t for mopd portability.
+ */
+#include <stdint.h>
 struct exec {
-	unsigned long a_midmag;	/* htonl(flags<<26 | mid<<16 | magic) */
-	unsigned long a_text;	/* text segment size */
-	unsigned long a_data;	/* initialized data size */
-	unsigned long a_bss;	/* uninitialized data size */
-	unsigned long a_syms;	/* symbol table size */
-	unsigned long a_entry;	/* entry point */
-	unsigned long a_trsize;	/* text relocation size */
-	unsigned long a_drsize;	/* data relocation size */
+	uint32_t a_midmag;	/* htonl(flags<<26 | mid<<16 | magic) */
+	uint32_t a_text;	/* text segment size */
+	uint32_t a_data;	/* initialized data size */
+	uint32_t a_bss;	/* uninitialized data size */
+	uint32_t a_syms;	/* symbol table size */
+	uint32_t a_entry;	/* entry point */
+	uint32_t a_trsize;	/* text relocation size */
+	uint32_t a_drsize;	/* data relocation size */
 };
 
 /* a_magic */
@@ -59,7 +63,8 @@ struct exec {
 #define	ZMAGIC		0413	/* demand load format */
 #define	QMAGIC		0314	/* "compact" demand load format; deprecated */
 
-#include <sys/aout_mids.h>
+/* Changed for mopd, instead using other file in netbsd_h directory */
+#include "aout_mids.h"
 
 /*
  * a_flags
@@ -150,7 +155,9 @@ struct exec {
 #define	N_STROFF(ex) \
 	(N_SYMOFF(ex) + (ex).a_syms)
 
-#include <machine/aout_machdep.h>
+
+/* Not needed for mopd */
+/* #include <machine/aout_machdep.h> */
 
 #ifdef _KERNEL
 

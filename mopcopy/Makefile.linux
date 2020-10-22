@@ -3,7 +3,8 @@ SRCS=mopcopy.c
 OBJS=${SRCS:.c=.o}
 
 LDLIBS+=../common/libcommon.a
-CFLAGS+=-I../common -DNOAOUT
+CFLAGS+=-I../common
+# -DNOAOUT not needed as long as including of files from netbsd_h works
 
 mopcopy: ${OBJS}
 

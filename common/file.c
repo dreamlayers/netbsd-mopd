@@ -38,12 +38,10 @@ __RCSID("$NetBSD: file.c,v 1.16 2016/06/08 01:11:49 christos Exp $");
 #ifndef NOAOUT
 # if defined(__NetBSD__) || defined(__OpenBSD__)
 #  include <sys/exec_aout.h>
-# endif
-# if defined(__bsdi__)
-#  define NOAOUT
-# endif
-# if defined(__FreeBSD__)
+# elif defined(__FreeBSD__)
 #  include <sys/imgact_aout.h>
+# else
+#  include "../netbsd_h/exec_aout.h"
 # endif
 # if !defined(MID_VAX)
 #  define MID_VAX 140

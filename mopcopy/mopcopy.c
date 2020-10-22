@@ -59,9 +59,10 @@ __RCSID("$NetBSD: mopcopy.c,v 1.7 2019/12/27 09:41:52 msaitoh Exp $");
 #if !defined(NOAOUT)
 #if defined(__NetBSD__) || defined(__OpenBSD__)
 #include <sys/exec_aout.h>
-#endif
-#if defined(__FreeBSD__)
+#elif defined(__FreeBSD__)
 #include <sys/imgact_aout.h>
+#else
+#include "../netbsd_h/exec_aout.h"
 #endif
 #endif /* !NOAOUT */
 #if defined(__bsdi__)
