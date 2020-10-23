@@ -298,6 +298,10 @@ getMID(int old_mid, int new_mid)
 	mid = old_mid;
 
 	switch (new_mid) {
+	/* 0 is used by Athena 4.3BSD, Ultrix, and 4.3BSD-Quasijarus0c */
+	case 0:
+		mid = 0;
+		break;
 	case MID_I386:
 		mid = MID_I386;
 		break;
@@ -362,11 +366,13 @@ getCLBYTES(int mid)
 	int	clbytes;
 
 	switch (mid) {
+	/* This works for Athena 4.3BSD. Is it valid for all mid == 0? */
+	case 0:
 #ifdef MID_VAX1K
 	case MID_VAX1K:
+#endif
 		clbytes = 1024;
 		break;
-#endif
 #ifdef MID_I386
 	case MID_I386:
 #endif
@@ -644,6 +650,11 @@ CheckAOutFile(int fd)
 
 	(void)lseek(fd, (off_t) 0, SEEK_SET);
 	
+	/* If mid == 0 is accepted, this is needed to avoid false positives. */
+	if (N_BADMAG (ex) && N_BADMAG (ex_swap)) {
+		return(-1);
+	}
+
 	mid = getMID(mid, N_GETMID (ex));
 
 	if (mid == -1) {
