@@ -265,6 +265,8 @@ mopStartLoad(const u_char *dst, const u_char *src, struct dllist *dl_rpr,
 		dle->dl_bsz = MAX_ETH_PAYLOAD;
 	if (dle->dl_bsz == 1030)	/* VS/uVAX 2000 needs this */
 		dle->dl_bsz = 1000;
+	if (dle->dl_bsz == 1422)	/* Ultrix 4.00 netload on KA630-A.V1.3 */
+		dle->dl_bsz = 1000;		/* This works, but actual limit unknown */
 	if (dle->dl_bsz == 0)		/* Needed by "big" VAXen */
 		dle->dl_bsz = MAX_ETH_PAYLOAD;
 	if (trans == TRANS_8023)
