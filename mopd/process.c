@@ -381,19 +381,29 @@ mopNextLoad(const u_char *dst, const u_char *src, u_char new_count, int trans)
 	} else {
 		if (len == 0) {
 			idx = pindex;
-			mopcode = MOP_K_CODE_PLT;
-			mopPutChar (pkt, &idx, mopcode);
+			mopPutChar (pkt, &idx, dle->endcode);
 			mopPutChar (pkt, &idx, dle->count);
-			mopPutChar (pkt, &idx, MOP_K_PLTP_HSN);
- 			mopPutChar (pkt, &idx, 3);
-			mopPutMulti(pkt, &idx, "ipc", 3);
-			mopPutChar (pkt, &idx, MOP_K_PLTP_HSA);
-			mopPutChar (pkt, &idx, 6);
-			mopPutMulti(pkt, &idx, src, 6);
-			mopPutChar (pkt, &idx, MOP_K_PLTP_HST);
-			mopPutTime (pkt, &idx, 0);
-			mopPutChar (pkt, &idx, 0);
-			mopPutLong (pkt, &idx, dle->xferaddr);
+			if (dle->endcode == MOP_K_CODE_PLT) {
+				mopPutChar (pkt, &idx, MOP_K_PLTP_HSN);
+				mopPutChar (pkt, &idx, 3);
+				mopPutMulti(pkt, &idx, "ipc", 3);
+				mopPutChar (pkt, &idx, MOP_K_PLTP_HSA);
+				mopPutChar (pkt, &idx, 6);
+				mopPutMulti(pkt, &idx, src, 6);
+				mopPutChar (pkt, &idx, MOP_K_PLTP_HST);
+				mopPutTime (pkt, &idx, 0);
+				mopPutChar (pkt, &idx, 0);
+				mopPutLong (pkt, &idx, dle->xferaddr);
+			} else if (dle->endcode == MOP_K_CODE_MLT) {
+				/* According to spec, load address could be omitted,
+				 * but Ultrix 4.00 netload expects it to be there.
+				 * It is irrelevant with no data, and only sent so
+				 * the transfer address is at the expected location.
+				 */
+				mopPutLong (pkt, &idx, dle->nloadaddr);
+				/* Ultrix 4.00 kernel has high bit set, which causes crash */
+				mopPutLong (pkt, &idx, dle->xferaddr & ~0x80000000);
+			}
 
 			mopPutLength(pkt, trans, idx);
 			(void)mopGetLength(pkt, trans);
@@ -481,9 +491,19 @@ mopProcessDL(FILE *fd, struct if_info *ii, const u_char *pkt, int *idx,
 		pgtype = mopGetChar(pkt,idx);	/* Program Type */
 		
 		tmpc = mopGetChar(pkt,idx);		/* Software ID Len */
+
+		dl_rpr = &dl;
+		memset(dl_rpr, 0, sizeof(*dl_rpr));
+
 		/* Ultrix 4.00 netload sends 0xff, but no string after it. */
-		if (tmpc == 0xff)
+		if (tmpc == 0xff) {
 			tmpc = 0;
+			/* Required by Ultrix 4.00 netload, not accepted by KA630-A.V1.3 */
+			dl_rpr->endcode = MOP_K_CODE_MLT;
+		} else {
+			dl_rpr->endcode = MOP_K_CODE_PLT;
+		}
+
 		if (tmpc > sizeof(pfile) - 1)
 			return;
 		for (i = 0; i < tmpc; i++) {
@@ -522,8 +542,6 @@ mopProcessDL(FILE *fd, struct if_info *ii, const u_char *pkt, int *idx,
 		
 		tmpc = mopGetChar(pkt,idx);		/* Processor */
 	
-		dl_rpr = &dl;
-		memset(dl_rpr, 0, sizeof(*dl_rpr));
 		dl_rpr->ii = ii;
 		memmove((char *)(dl_rpr->eaddr), (const char *)src, 6);
 		mopProcessInfo(pkt,idx,moplen,dl_rpr,trans);

@@ -84,6 +84,7 @@ struct dllist {
 	u_int32_t	xferaddr;	/* Transfer Address		*/
 	u_int32_t	nloadaddr;	/* Next Load Address		*/
 	off_t		lseek;		/* Seek before last read	*/
+	int		endcode;	/* MOP command to end with	*/
 	mopd_imagetype	image_type;	/* what type of image is it?	*/
 
 	/* For Elf32 files */
