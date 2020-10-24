@@ -435,6 +435,7 @@ mopProcessDL(FILE *fd, struct if_info *ii, const u_char *pkt, int *idx,
 	int     i, nfd;
 	struct dllist dl, *dl_rpr;
 	u_char  load;
+	u_char  pgtype;
 
 	if (DebugFlag == DEBUG_ONELINE) {
 		mopPrintOneline(stdout, pkt, trans);
@@ -475,15 +476,19 @@ mopProcessDL(FILE *fd, struct if_info *ii, const u_char *pkt, int *idx,
 			(void)fprintf(stderr,"\n");
 		}
 		
-		(void)mopGetChar(pkt,idx);	/* Program Type */
+		pgtype = mopGetChar(pkt,idx);	/* Program Type */
 		
 		tmpc = mopGetChar(pkt,idx);		/* Software ID Len */
+		/* Ultrix 4.00 netload sends 0xff, but no string after it. */
+		if (tmpc == 0xff)
+			tmpc = 0;
 		if (tmpc > sizeof(pfile) - 1)
 			return;
 		for (i = 0; i < tmpc; i++) {
 			pfile[i] = mopGetChar(pkt,idx);
 			pfile[i+1] = '\0';
 		}
+
 
 		if (tmpc == 0) {
 			/* In a normal implementation of a MOP Loader this */
@@ -493,9 +498,24 @@ mopProcessDL(FILE *fd, struct if_info *ii, const u_char *pkt, int *idx,
 			/* to ask. My solution is to use the ethernet addr */
 			/* as filename. Implementing a database would be   */
 			/* overkill.					   */
+			const char *suffix;
+			switch (pgtype) {
+			case MOP_K_PGTY_SECLDR:
+				suffix = ".2";
+				break;
+			case MOP_K_PGTY_TERLDR:
+				suffix = ".3";
+				break;
+			case MOP_K_PGTY_MGNTFL:
+				suffix = ".M";
+			case MOP_K_PGTY_OPRSYS:
+			default:
+				suffix = "";
+				break;
+			}
 			snprintf(pfile, sizeof(pfile),
-			    "%02x%02x%02x%02x%02x%02x%c",
-			    src[0],src[1],src[2],src[3],src[4],src[5],0);
+			    "%02x%02x%02x%02x%02x%02x%s%c",
+			    src[0],src[1],src[2],src[3],src[4],src[5],suffix,0);
 		}
 		
 		tmpc = mopGetChar(pkt,idx);		/* Processor */
