@@ -1,0 +1,11 @@
+# $NetBSD$
+SRCS=mkultconf.c
+OBJS=${SRCS:.c=.o}
+
+LDLIBS+=../common/libcommon.a
+CFLAGS+=-I../common
+
+mkultconf: ${OBJS}
+
+clean:
+	rm -f ${OBJS} mkultconf

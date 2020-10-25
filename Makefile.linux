@@ -1,4 +1,4 @@
-SUBDIRS := common mopd mopcopy mopprobe moptrace mopchk
+SUBDIRS := common mopd mopcopy mopprobe moptrace mopchk ultrix
 
 CLEANDIRS := $(SUBDIRS:%=clean-%)
 INSTALLDIRS := $(SUBDIRS:%=install-%)
@@ -14,6 +14,7 @@ mopcopy: common
 mopprobe: common
 moptrace: common
 mopchk: common
+ultrix: common
 
 # Rules
 
