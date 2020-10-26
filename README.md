@@ -10,6 +10,12 @@ You can restrict the programs to a specific Ethernet interface by using the inte
 
 ## Notes
 
+#### 802.3 transport issues
+
+I need to disable 802.3 transport using the `-4` switch. Otherwise, KA650
+and VAXstation 3100 m38 start 802.3 transfers which fail. Both also make
+ordinary Ethernet transport requests, and those work.
+
 #### Conversion of files
 
 MOP loads files via packets which copy blocks of data to specific locations in memory, and then tells the system to start execution at a particular location. The clients know nothing about a.out or ELF, so the server needs to know how to load those files into client memory. 
@@ -22,9 +28,17 @@ You can use mopcopy to convert ELF and a.out files to MOP format, but you don't 
 
 The way mopd uses the Ethernet device requires root access.  Without root access, you get "Operation not permitted" errors, which you won't see if you run mopd as a daemon.
 
-#### The server only supports the first stage of MOP booting
+#### Partial MOP implementations
 
-With NetBSD/VAX, you only need the first stage. Afterwards it will use RARP and bootparams, or BOOTP, and then NFS. For Ultrix you can successfully send ultrixload using this program, but then it will perform another load via MOP, which isn't supported by this program yet.
+Both this code and the code running on the other end is a partial and possibly
+quirky implementation of the MOP protocol. Making things work is not simply a
+matter of following the specification. You need to send what the other side
+can deal with.
+
+#### Booting ULTRIX
+
+This code can now boot ULTRIX 4.00. See the
+[README.md in the ultrix folder](ultrix/README.md) for more information.
 
 ## Links
 
