@@ -66,9 +66,23 @@ similarly. For ULTRIX 4.00 and maybe other versions, Change
 
 #### ULTRIX only sees 22 bits of disk usage
 
-If you look at `du` output in the NFS mount on ULTRIX, you'll see only the
-low order 22 bits of the numbers you see for that file system in Linux. The
-ignoring of higher bits can cause ULTRIX to decide the file system is full.
+From the server, ULTRIX receives a block size and numbers of total, used and
+free blocks. It multiplies those numbers by the block size and then divides
+by 1024. It seems VAX multiplication and division only works with 32-bit
+values, and not double width ones like x86. So the sizes in bytes must fit
+within a signed 32-bit number. This patch divides the block size from the
+server by 1024, and then multiplies received sizes by that number. It gives the
+wrong answer if the block size isn't a multiple of 1024, but it's practically
+always a multiple of 1024. If it is smaller than 1024, block sizes are
+multiplied by 1. Even when giving wrong results, this is better than what was
+there before.
+
+In ULTRIX 4.0 in nfs_statfs() in nfs_vfsops.o or the kernel, find:
+`C5ADF0ADF450C68F0004000050D0AC0851D050A108C5ADF0ADF850C68F0004000050D0AC0851D050A10CC5ADF0ADFC50C68F0004000050D0AC0851D050A110`
+and change it to:
+`D0EDF0FFFFFF53C68F00040000531203D00153D0AC0855C553EDF4FFFFFFA508C553EDF8FFFFFFA50CC553EDFCFFFFFFA510D08FEFBEADDE53D00053D00053`
+Test by running `df` in ULTRIX and comparing output to `df` for that file
+system in Linux.
 
 ## Other notes
 
