@@ -34,6 +34,7 @@ __RCSID("$NetBSD: file.c,v 1.16 2016/06/08 01:11:49 christos Exp $");
 #include "file.h"
 #include "mopdef.h"
 #include <stddef.h>
+#include <stdbool.h>
 
 #ifndef NOAOUT
 # if defined(__NetBSD__) || defined(__OpenBSD__)
@@ -61,7 +62,7 @@ __RCSID("$NetBSD: file.c,v 1.16 2016/06/08 01:11:49 christos Exp $");
 
 #ifndef NOAOUT
 static int	getCLBYTES(int);
-static int	getMID(int, int);
+static bool	badMID(int);
 #endif
 
 const char *
@@ -290,74 +291,59 @@ GetMopFileInfo(struct dllist *dl)
 }
 
 #ifndef NOAOUT
-static int
-getMID(int old_mid, int new_mid)
+/* Returns true for unrecognised MID, else false */
+static bool
+badMID(int mid)
 {
-	int	mid;
-
-	mid = old_mid;
-
-	switch (new_mid) {
+	switch (mid) {
 	/* 0 is used by Athena 4.3BSD, Ultrix, and 4.3BSD-Quasijarus0c */
 	case 0:
-		mid = 0;
 		break;
 	case MID_I386:
-		mid = MID_I386;
 		break;
 #ifdef MID_M68K
 	case MID_M68K:
-		mid = MID_M68K;
 		break;
 #endif
 #ifdef MID_M68K4K
 	case MID_M68K4K:
-		mid = MID_M68K4K;
 		break;
 #endif
 #ifdef MID_NS32532
 	case MID_NS32532:
-		mid = MID_NS32532;
 		break;
 #endif
 	case MID_SPARC:
-		mid = MID_SPARC;
 		break;
 #ifdef MID_PMAX
 	case MID_PMAX:
-		mid = MID_PMAX;
 		break;
 #endif
 #ifdef MID_VAX
 	case MID_VAX:
-		mid = MID_VAX;
 		break;
 #endif
 #ifdef MID_VAX1K
 	case MID_VAX1K:
-		mid = MID_VAX1K;
 		break;
 #endif
 #ifdef MID_ALPHA
 	case MID_ALPHA:
-		mid = MID_ALPHA;
 		break;
 #endif
 #ifdef MID_MIPS
 	case MID_MIPS:
-		mid = MID_MIPS;
 		break;
 #endif
 #ifdef MID_ARM6
 	case MID_ARM6:
-		mid = MID_ARM6;
 		break;
 #endif
 	default:
-		break;
+		return true;
 	}
 
-	return(mid);
+	return false;
 }
 
 static int
@@ -638,34 +624,22 @@ CheckAOutFile(int fd)
 	return(-1);
 #else
 	struct exec ex, ex_swap;
-	int	mid = -1;
+
+	(void)lseek(fd, (off_t) 0, SEEK_SET);
 
 	if (read(fd, (char *)&ex, sizeof(ex)) != sizeof(ex))
-		return(-1);
+		return -1;
 
-	(void)lseek(fd, (off_t) 0, SEEK_SET);
-	
-	if (read(fd, (char *)&ex_swap, sizeof(ex_swap)) != sizeof(ex_swap))
-		return(-1);
+	memcpy(&ex_swap, &ex, sizeof(ex));
+	mopFileSwapX((u_char *)&ex_swap, 0, 4);
 
-	(void)lseek(fd, (off_t) 0, SEEK_SET);
-	
-	/* If mid == 0 is accepted, this is needed to avoid false positives. */
-	if (N_BADMAG (ex) && N_BADMAG (ex_swap)) {
-		return(-1);
-	}
+	if (N_BADMAG(ex) && N_BADMAG(ex_swap))
+		return -1;
 
-	mid = getMID(mid, N_GETMID (ex));
+	if (badMID(N_GETMID(ex)) && badMID(N_GETMID(ex_swap)))
+		return -1;
 
-	if (mid == -1) {
-		mid = getMID(mid, N_GETMID (ex_swap));
-	}
-
-	if (mid != -1) {
-		return(0);
-	} else {
-		return(-1);
-	}
+	return 0;
 #endif /* NOAOUT */
 }
 
@@ -675,37 +649,29 @@ GetAOutFileInfo(struct dllist *dl)
 #ifdef NOAOUT
 	return(-1);
 #else
-	struct exec ex, ex_swap;
-	u_int32_t	mid = -1;
+	u_int32_t	mid;
 	u_int32_t	magic, clbytes, clofset;
+	struct exec	ex, ex_swap;
+
+	(void)lseek(dl->ldfd, (off_t) 0, SEEK_SET);
 
 	if (read(dl->ldfd, (char *)&ex, sizeof(ex)) != sizeof(ex))
 		return(-1);
 
-	(void)lseek(dl->ldfd, (off_t) 0, SEEK_SET);
-
-	if (read(dl->ldfd, (char *)&ex_swap,
-		 sizeof(ex_swap)) != sizeof(ex_swap))
-		return(-1);
-
+	memcpy(&ex_swap, &ex, sizeof(ex));
 	mopFileSwapX((u_char *)&ex_swap, 0, 4);
 
-	mid = getMID(mid, N_GETMID (ex));
-
-	if (mid == (uint32_t)-1) {
-		mid = getMID(mid, N_GETMID (ex_swap));
-		if (mid != (uint32_t)-1) {
-			mopFileSwapX((u_char *)&ex, 0, 4);
-		}
-	}
-
-	if (mid == (uint32_t)-1) {
-		return(-1);
-	}
-
+        // XXX Does swapped magic always imply swapped MID?
 	if (N_BADMAG (ex)) {
-		return(-1);
+		if (N_BADMAG (ex_swap))
+			return -1;
+		mid = N_GETMID(ex_swap);
+	} else {
+		mid = N_GETMID(ex);
 	}
+
+	if (badMID(mid))
+		return -1;
 
 	switch (mid) {
 	case MID_I386:
