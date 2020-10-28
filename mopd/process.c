@@ -530,6 +530,7 @@ mopProcessDL(FILE *fd, struct if_info *ii, const u_char *pkt, int *idx,
 				break;
 			case MOP_K_PGTY_MGNTFL:
 				suffix = ".M";
+				break;
 			case MOP_K_PGTY_OPRSYS:
 			default:
 				suffix = "";
