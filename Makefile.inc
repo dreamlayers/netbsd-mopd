@@ -4,6 +4,8 @@
 
 USE_FORT?=yes	# network server
 
+WARNS=	5
+
 LIBCOMMON != cd ${.CURDIR}/../common && ${PRINTOBJDIR}
 CPPFLAGS+=-I${.CURDIR}/../common
 DPADD+=	${LIBCOMMON}/libcommon.a
