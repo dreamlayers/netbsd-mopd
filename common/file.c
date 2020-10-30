@@ -653,29 +653,40 @@ GetAOutFileInfo(struct dllist *dl)
 #else
 	u_int32_t	mid;
 	u_int32_t	magic, clbytes, clofset;
-	struct exec	ex, ex_swap;
+	struct exec	ex;
 
 	(void)lseek(dl->ldfd, (off_t) 0, SEEK_SET);
 
 	if (read(dl->ldfd, (char *)&ex, sizeof(ex)) != sizeof(ex))
 		return(-1);
 
-	memcpy(&ex_swap, &ex, sizeof(ex));
-	mopFileSwapX((u_char *)&ex_swap, 0, 4);
-
-        // XXX Does swapped magic always imply swapped MID?
+	/* Magic and mid should have the same endian */
 	if (N_BADMAG (ex)) {
-		if (N_BADMAG (ex_swap))
+		/* NetBSD stores ex.a_midmag in big endian format since 1.0 or
+		 * earlier. The N_ macros take care of converting to host
+		 * endian, without needing swapping here. This is needed on a
+		 * big endian host for reading mid 0 files with little endian
+		 * magic, like Ultrix and Athena-4.3BSD. It would also be
+		 * needed for non-zero mid files with ex.a_midmag in little
+		 * endian, if such files exist.
+		 */
+		mopFileSwapX((u_char *)&ex, 0, 4);
+		if (N_BADMAG (ex))
 			return -1;
-		mid = N_GETMID(ex_swap);
-	} else {
-		mid = N_GETMID(ex);
+		/* ex.a_midmag must remain swapped for later use */
 	}
 
+	mid = N_GETMID(ex);
 	if (badMID(mid))
 		return -1;
 
 	switch (mid) {
+	/* In this case we don't really know the endian. It could maybe be
+	 * determined from the endian of the magic. But since the architectures
+	 * supporting the MOP protocol use litle endian, it seems reasonable
+	 * to assume that here.
+	 */
+	case 0:
 	case MID_I386:
 #ifdef MID_NS32532
 	case MID_NS32532:
@@ -695,13 +706,13 @@ GetAOutFileInfo(struct dllist *dl)
 #ifdef MID_ARM6
 	case MID_ARM6:
 #endif
-		ex.a_text  = mopFileGetLX((u_char *)&ex_swap,  4, 4);
-		ex.a_data  = mopFileGetLX((u_char *)&ex_swap,  8, 4);
-		ex.a_bss   = mopFileGetLX((u_char *)&ex_swap, 12, 4);
-		ex.a_syms  = mopFileGetLX((u_char *)&ex_swap, 16, 4);
-		ex.a_entry = mopFileGetLX((u_char *)&ex_swap, 20, 4);
-		ex.a_trsize= mopFileGetLX((u_char *)&ex_swap, 24, 4);
-		ex.a_drsize= mopFileGetLX((u_char *)&ex_swap, 28, 4);
+		ex.a_text  = mopFileGetLX((u_char *)&ex,  4, 4);
+		ex.a_data  = mopFileGetLX((u_char *)&ex,  8, 4);
+		ex.a_bss   = mopFileGetLX((u_char *)&ex, 12, 4);
+		ex.a_syms  = mopFileGetLX((u_char *)&ex, 16, 4);
+		ex.a_entry = mopFileGetLX((u_char *)&ex, 20, 4);
+		ex.a_trsize= mopFileGetLX((u_char *)&ex, 24, 4);
+		ex.a_drsize= mopFileGetLX((u_char *)&ex, 28, 4);
 		break;
 #ifdef MID_M68K
 	case MID_M68K:
@@ -713,13 +724,13 @@ GetAOutFileInfo(struct dllist *dl)
 #ifdef MID_MIPS
 	case MID_MIPS:
 #endif
-		ex.a_text  = mopFileGetBX((u_char *)&ex_swap,  4, 4);
-		ex.a_data  = mopFileGetBX((u_char *)&ex_swap,  8, 4);
-		ex.a_bss   = mopFileGetBX((u_char *)&ex_swap, 12, 4);
-		ex.a_syms  = mopFileGetBX((u_char *)&ex_swap, 16, 4);
-		ex.a_entry = mopFileGetBX((u_char *)&ex_swap, 20, 4);
-		ex.a_trsize= mopFileGetBX((u_char *)&ex_swap, 24, 4);
-		ex.a_drsize= mopFileGetBX((u_char *)&ex_swap, 28, 4);
+		ex.a_text  = mopFileGetBX((u_char *)&ex,  4, 4);
+		ex.a_data  = mopFileGetBX((u_char *)&ex,  8, 4);
+		ex.a_bss   = mopFileGetBX((u_char *)&ex, 12, 4);
+		ex.a_syms  = mopFileGetBX((u_char *)&ex, 16, 4);
+		ex.a_entry = mopFileGetBX((u_char *)&ex, 20, 4);
+		ex.a_trsize= mopFileGetBX((u_char *)&ex, 24, 4);
+		ex.a_drsize= mopFileGetBX((u_char *)&ex, 28, 4);
 		break;
 	default:
 		break;
