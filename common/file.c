@@ -155,10 +155,10 @@ CheckMopFile(int fd)
 	u_char	header[512];
 	short	image_type;
 
+	(void)lseek(fd, (off_t) 0, SEEK_SET);
+
 	if (read(fd, header, 512) != 512)
 		return(-1);
-
-	(void)lseek(fd, (off_t) 0, SEEK_SET);
 
 	image_type = (u_short)(header[IHD_W_ALIAS+1]*256 +
 			       header[IHD_W_ALIAS]);
@@ -185,6 +185,8 @@ GetMopFileInfo(struct dllist *dl)
 	u_char		header[512];
 	short		image_type;
 	u_int32_t	load_addr, xfr_addr, isd, iha, hbcnt, isize;
+
+	(void)lseek(dl->ldfd, (off_t) 0, SEEK_SET);
 
 	if (read(dl->ldfd, header, 512) != 512)
 		return(-1);
@@ -880,6 +882,11 @@ GetFileInfo(struct dllist *dl)
 	return(-1);
 }
 
+/* For mop and a.out files, this function assumes the current position in the
+ * file is correct, and reads sequentially, without seeking. For those files,
+ * the position needs to start after the header and not change between calls
+ * to this function.
+ */
 ssize_t
 mopFileRead(struct dllist *dlslot, u_char *buf)
 {
