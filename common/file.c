@@ -73,7 +73,7 @@ static char rcsid[] = "$Id: file.c,v 1.4 1996/08/16 22:39:22 moj Exp $";
 #endif
 
 #ifndef NOELF
-#include <libelf/libelf.h>
+#include <libelf.h>
 #endif
 
 struct mopphdr {
@@ -582,6 +582,7 @@ GetAOutFileInfo(fd, load, xfr, ftype, seg)
 		ex.a_drsize= mopFileGetBX((u_char *)&ex_swap, 28, 4);
 		break;
 	default:
+		break;
 /*###525 [cc] syntax error before `}'%%%*/
 	}
 
@@ -635,6 +636,7 @@ GetAOutFileInfo(fd, load, xfr, ftype, seg)
 			break;
 #endif
 		default:
+			break;
 		}
 		printf(") Magic: ");
 		switch (N_GETMAGIC (ex)) {

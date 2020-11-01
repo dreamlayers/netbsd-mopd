@@ -38,6 +38,7 @@ static char rcsid[] = "$Id: moptrace.c,v 1.10 1996/08/05 07:49:14 moj Exp $";
  *		moptrace [ -d ] [ -3 | -4 ] interface
  */
 
+#include <string.h>
 #include <common/os.h>
 #include <common/common.h>
 #include <common/mopdef.h>
@@ -52,7 +53,7 @@ static char rcsid[] = "$Id: moptrace.c,v 1.10 1996/08/05 07:49:14 moj Exp $";
  * The list of all interfaces that are being listened to. 
  * "selects" on the descriptors in this list.
  */
-struct if_info *iflist;
+extern struct if_info *iflist;
 
 #ifdef NO__P
 void   Loop	     (/* void */);

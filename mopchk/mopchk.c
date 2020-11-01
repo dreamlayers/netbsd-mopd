@@ -37,6 +37,7 @@ static char rcsid[] = "$Id: mopchk.c,v 1.5 1996/08/16 22:46:55 moj Exp $";
  * Usage:	mopchk [-a] [-v] [filename...]
  */
 
+#include <string.h>
 #include <common/os.h>
 #include <common/common.h>
 #include <common/mopdef.h>
@@ -48,7 +49,7 @@ static char rcsid[] = "$Id: mopchk.c,v 1.5 1996/08/16 22:46:55 moj Exp $";
  * The list of all interfaces that are being listened to.  rarp_loop()
  * "selects" on the descriptors in this list.
  */
-struct if_info *iflist;
+extern struct if_info *iflist;
 
 #ifdef NO__P
 void   Usage         (/* void */);

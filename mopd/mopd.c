@@ -38,6 +38,7 @@ static char rcsid[] = "$Id: mopd.c,v 1.14 1996/03/31 19:20:42 moj Exp $";
  *		mopd [ -d -f -v ] [ -3 | -4 ] interface
  */
 
+#include <string.h>
 #include <common/os.h>
 #include <common/common.h>
 #include <common/mopdef.h>
@@ -49,12 +50,6 @@ static char rcsid[] = "$Id: mopd.c,v 1.14 1996/03/31 19:20:42 moj Exp $";
 #include <common/dl.h>
 #include <common/rc.h>
 #include "process.h"
-
-/*
- * The list of all interfaces that are being listened to. 
- * "selects" on the descriptors in this list.
- */
-struct if_info *iflist;
 
 #ifdef NO__P
 void   Loop	     (/* void */);

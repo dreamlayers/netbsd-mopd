@@ -2,7 +2,7 @@ AR = ar
 CC = gcc
 RANLIB = ranlib
 
-CFLAGS = -O2 -g
+CFLAGS = -O2 -g -Wno-endif-labels
 LDFLAGS =
 LIBELF = -lelf
 

@@ -31,6 +31,7 @@
 static char rcsid[] = "$Id: get.c,v 1.5 1996/03/31 18:50:14 moj Exp $";
 #endif
 
+#include <strings.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include "mopdef.h"

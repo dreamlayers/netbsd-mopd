@@ -31,6 +31,7 @@
 static char rcsid[] = "$Id: device.c,v 1.21 1996/08/08 00:00:59 moj Exp $";
 #endif
 
+#include <string.h>
 #include "os.h"
 #include "common.h"
 #include "mopdef.h"
@@ -48,7 +49,6 @@ int  mopOpenDL(struct if_info *, int);
 int  mopOpenRC(struct if_info *, int);
 #endif
 int pfTrans();
-int pfInit();
 int pfWrite();
 
 #ifdef	DEV_NEW_CONF

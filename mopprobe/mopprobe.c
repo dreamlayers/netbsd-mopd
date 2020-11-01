@@ -38,6 +38,8 @@ static char rcsid[] = "$Id: mopprobe.c,v 1.11 1996/08/11 22:16:10 moj Exp $";
  *		mopprobe [ -3 | -4 ] interface
  */
 
+#include <string.h>
+#include <arpa/inet.h>
 #include <common/os.h>
 #include <common/common.h>
 #include <common/mopdef.h>
@@ -52,7 +54,7 @@ static char rcsid[] = "$Id: mopprobe.c,v 1.11 1996/08/11 22:16:10 moj Exp $";
  * The list of all interfaces that are being listened to.  rarp_loop()
  * "selects" on the descriptors in this list.
  */
-struct if_info *iflist;
+extern struct if_info *iflist;
 
 #ifdef NO__P
 void   Loop	     (/* void */);

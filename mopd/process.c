@@ -31,6 +31,7 @@
 static char rcsid[] = "$Id: process.c,v 1.21 1996/08/22 17:04:07 moj Exp $";
 #endif
 
+#include <string.h>
 #include <common/os.h>
 #include <common/common.h>
 #include <common/mopdef.h>
