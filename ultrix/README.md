@@ -84,6 +84,35 @@ and change it to:
 Test by running `df` in ULTRIX and comparing output to `df` for that file
 system in Linux.
 
+This problem does not exist in ULTRIX 4.5, and the patch is not needed there.
+
+#### NFS swap accesses fail
+
+The very first NFS operation from ULTRIX gets a file handle for the swap file.
+That must work or else the kernel immediately panics. But actual writes and
+reads to swap happen later. If a write to swap fails, you'll see
+`cpu 1 panic: IO err in push`.
+
+In Unix a user has a primary group, and can also be a member of other auxiliary
+groups. When sending credentials for RPC, such as NFS writes, ULTRIX 4.5 can
+send up to 32 groups, but Linux is only willing to accept up to 16. Normally
+this is only a problem when a user who is a member of more than 16 groups tries
+to access a file. But nfs_swapconf() fails to properly initialize the list of
+auxiliary groups in a data structure. Any actual groups in the list are
+supposed to be at the start, and the rest is supposed to be filled with
+negative values. But ULTRIX fills it with zeroes, and makes RPC requests
+listing 32 zeroes as auxiliary groups.
+
+In ULTRIX 4.5 nfs_swapconf() in init_main.o or the kernel, find
+`b4a002d0adfc50d0c0cc0050b4a004d0adfc50d0c0cc0050d4a008` and change it to
+`c18f880000005051c00850988fff60c00450d1505112f401010101`. This replaces some
+initialization to zero which is pointless because the structure is zeroed when
+allocated.
+
+An alternative strategy would be to limit the number of auxiliary groups
+sent to 16, in authkern_marshal() in auth_kern.o. Similar code exists in
+authunix_prot.o but does not seem used for swap accesses.
+
 ## Other notes
 
 * To run X at startup, take a look at `man dxsession` and add that line to
